@@ -13,6 +13,7 @@ import (
 	"StatusApp/internal/models"
 	"StatusApp/internal/renderers"
 	"StatusApp/internal/tailscale"
+	"StatusApp/internal/truenas"
 	"StatusApp/internal/weather"
 )
 
@@ -54,22 +55,34 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		configs.WindowWidth = msg.Width
 		return m, nil
 	case tickMsg:
-		if configs.TailscaleWaits == 0 {
+		if configs.TailscaleWaits <= 0 {
 			devs := tailscale.TailscaleRequest()
 			m.Devices = devs.(models.TailscaleMsg).Devices
 			m.Misc = devs.(models.TailscaleMsg).Extra
+
 			weather := weather.WeatherRequest()
 			m.Weather = weather.(models.WeatherMsg).Weather
+
 			keyExpiry := tailscale.GetKeyExpiry()
 			m.KeyExpiry = keyExpiry.(models.TimeMsg).Time
+
+			apps := truenas.GetApps()
+			m.TruenasApps = apps.(models.TruenasMsg).Apps
+
 			configs.TailscaleWaits = 60
 		}
-		configs.TailscaleWaits = configs.TailscaleWaits - 1
+		configs.TailscaleWaits--
 		return m, tickCmd()
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "ctrl+c":
 			return m, tea.Quit
+		case "a":
+			configs.CurrentScreen = configs.ScreenApps
+			return m, nil
+		case "m":
+			configs.CurrentScreen = configs.ScreenMain
+			return m, nil
 		default:
 			return m, nil
 		}
@@ -80,20 +93,41 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m mainModel) View() string {
 	result := ""
-	clock := renderers.RenderClock(m.Model)
-	tailscale := renderers.RenderTailscale(m.Model)
-	result = lipgloss.JoinHorizontal(
-		lipgloss.Left,
-		tailscale,
-		clock,
-	)
-	schedule := renderers.RenderSchedule()
+
+	menustyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#808080")).
+		Width(configs.ScheduleStyle.GetWidth()).
+		AlignHorizontal(lipgloss.Center)
+	menu := menustyle.Render("q: quit | a: apps | m: main")
+
+	switch configs.CurrentScreen {
+	case configs.ScreenApps:
+		result = configs.BoldText.Render("Apps!")
+	case configs.ScreenMain:
+		fallthrough
+	default:
+		clock := renderers.RenderClock(m.Model)
+		tailscale := renderers.RenderTailscale(m.Model)
+		result = lipgloss.JoinHorizontal(
+			lipgloss.Left,
+			tailscale,
+			clock,
+		)
+
+		schedule := renderers.RenderSchedule()
+		result = lipgloss.JoinVertical(
+			lipgloss.Top,
+			result,
+			schedule,
+		)
+
+	}
+
 	result = lipgloss.JoinVertical(
 		lipgloss.Top,
 		result,
-		schedule,
+		menu,
 	)
-
 	centered := lipgloss.Place(
 		configs.WindowWidth,
 		configs.WindowHeight,

@@ -8,6 +8,7 @@ const (
 )
 
 var (
+	CurrentScreen    = ScreenMain
 	TailscaleWaits   = 0
 	SoonMeeting      = false
 	InMeeting        = false
@@ -38,7 +39,7 @@ var (
 			BorderForeground(NiceBlue)
 
 	TailscaleStyle = lipgloss.NewStyle().
-			Padding(0, 2, 0, 2).
+			Padding(1, 2, 0, 2).
 			Margin(1, 1, 1, 1).
 			Width(35)
 
@@ -51,6 +52,11 @@ var (
 	BoldText = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(HeaderText)
+)
+
+const (
+	ScreenMain = iota
+	ScreenApps
 )
 
 func SetBg(style lipgloss.Style, line int) lipgloss.Style {

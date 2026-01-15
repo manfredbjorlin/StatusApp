@@ -1,8 +1,6 @@
 package renderers
 
 import (
-	"StatusApp/configs"
-	"StatusApp/internal/models"
 	"fmt"
 	"strings"
 	"time"
@@ -10,15 +8,27 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+
+	"StatusApp/configs"
+	"StatusApp/internal/models"
+	"StatusApp/internal/truenas"
 )
 
 func RenderTailscale(m models.Model) string {
 	var sb strings.Builder
 	greenBold := lipgloss.NewStyle().Bold(true).Foreground(configs.BrightGreen)
 	pinkBold := lipgloss.NewStyle().Bold(true).Foreground(configs.HotPink)
-	sb.WriteString(
-		configs.BoldText.Render("Tailscale") + "\n\n",
-	)
+	// sb.WriteString(
+	// 	configs.BoldText.Render("Tailscale") + "\n\n",
+	// )
+
+	yes, no := truenas.GetAppStatus(m.TruenasApps)
+	sb.WriteString(fmt.Sprintf("%-15s", "Dodo Apps:"))
+	sb.WriteString(greenBold.Render("\uf00c"))
+	sb.WriteString(fmt.Sprintf(" %d | ", yes))
+	sb.WriteString(pinkBold.Render("\uf00d"))
+	sb.WriteString(fmt.Sprintf(" %d\n\n", no))
+
 	configs.TailscaleRenders++
 	if configs.TailscaleRenders >= 5 {
 		configs.TailscaleRenders = 0
@@ -91,8 +101,8 @@ func RenderTailscale(m models.Model) string {
 		minutes := int(offlineDiff.Minutes())
 		diffText = fmt.Sprintf("%4d m", minutes)
 	}
-	sb.WriteString("\nAPI key expiry: ")
-	keytext := fmt.Sprintf("%14s", "\uf017 "+diffText)
+	sb.WriteString("\nTailscale key expiry: ")
+	keytext := fmt.Sprintf("%0s", "\uf017 "+diffText)
 	if offlineDiff.Hours() < (24 * 4) {
 		sb.WriteString(pinkBold.Render(keytext))
 	} else {

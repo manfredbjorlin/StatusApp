@@ -2,6 +2,17 @@ package models
 
 import "time"
 
+type TruenasApp struct {
+	Id               string            `json:"id"`
+	Name             string            `json:"name"`
+	State            string            `json:"state"`
+	UpgradeAvailable bool              `json:"upgrade_available"`
+	LatestVersion    string            `json:"latest_version"`
+	Version          string            `json:"version"`
+	HumanVersion     string            `json:"human_version"`
+	Portals          map[string]string `json:"portals"`
+}
+
 type Meeting struct {
 	Time  time.Time
 	End   time.Time
@@ -47,10 +58,11 @@ type Condition struct {
 }
 
 type Model struct {
-	Devices   Devices
-	KeyExpiry time.Time
-	Misc      string
-	Weather   Weather
+	Devices     Devices
+	KeyExpiry   time.Time
+	Misc        string
+	Weather     Weather
+	TruenasApps []TruenasApp
 }
 
 type (
@@ -61,4 +73,5 @@ type (
 	}
 	WeatherMsg struct{ Weather Weather }
 	TimeMsg    struct{ Time time.Time }
+	TruenasMsg struct{ Apps []TruenasApp }
 )
