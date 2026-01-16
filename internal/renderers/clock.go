@@ -8,6 +8,7 @@ import (
 	"github.com/mbndr/figlet4go"
 
 	"StatusApp/configs"
+	"StatusApp/internal/common"
 	"StatusApp/internal/models"
 )
 
@@ -41,18 +42,29 @@ func RenderClock(m models.Model) string {
 
 	weatherIcon := getWeatherIcon(m.Weather.Current.Condition.Code, m.Weather.Current.IsDay)
 
+	waterTempDiff := common.GetTimeDifferenceString(m.WaterTemp.LastUpdate)
+	waterTemps := fmt.Sprintf(
+		"\uef30  %s: %v\ue33eC (%s)",
+		m.WaterTemp.Place,
+		m.WaterTemp.Temperature,
+		waterTempDiff,
+	)
+	weather := fmt.Sprintf(
+		"%s  %v\ue33eC (%v\ue33eC)",
+		weatherIcon,
+		m.Weather.Current.Temp,
+		m.Weather.Current.FeelsLike,
+	)
+	weatherLine := weather
+	if configs.TailscaleVersion {
+		weatherLine = waterTemps
+	}
+
 	withText := lipgloss.JoinVertical(
 		lipgloss.Center,
 		clock,
 		configs.BoldText.Render(time.Now().Format(configs.DateFormat)),
-		configs.BoldText.Render(
-			fmt.Sprintf(
-				"%s  %v\ue33eC (%v\ue33eC)",
-				weatherIcon,
-				m.Weather.Current.Temp,
-				m.Weather.Current.FeelsLike,
-			),
-		),
+		configs.BoldText.Render(weatherLine),
 	)
 
 	return configs.ClockStyle.Render(withText)

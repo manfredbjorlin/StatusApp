@@ -60,8 +60,24 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Devices = devs.(models.TailscaleMsg).Devices
 			m.Misc = devs.(models.TailscaleMsg).Extra
 
-			weather := weather.WeatherRequest()
-			m.Weather = weather.(models.WeatherMsg).Weather
+			w := weather.WeatherRequest()
+			m.Weather = w.(models.WeatherMsg).Weather
+
+			waterTemp := weather.GetWaterTemperature()
+			if len(waterTemp.(models.WaterTempMsg).WaterTemp.Embedded.NearestLocations) > 0 {
+				tempLocation := waterTemp.(models.WaterTempMsg).WaterTemp.Embedded.NearestLocations[0]
+				m.WaterTemp = models.WaterTemperatureInternal{
+					Place:       tempLocation.Location.Name,
+					Temperature: tempLocation.Temperature,
+					LastUpdate:  tempLocation.Time,
+				}
+			} else {
+				m.WaterTemp = models.WaterTemperatureInternal{
+					Place:       "N/A",
+					Temperature: 0.0,
+					LastUpdate:  time.Now(),
+				}
+			}
 
 			keyExpiry := tailscale.GetKeyExpiry()
 			m.KeyExpiry = keyExpiry.(models.TimeMsg).Time

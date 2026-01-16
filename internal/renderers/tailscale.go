@@ -10,6 +10,7 @@ import (
 	"golang.org/x/text/language"
 
 	"StatusApp/configs"
+	"StatusApp/internal/common"
 	"StatusApp/internal/models"
 	"StatusApp/internal/truenas"
 )
@@ -23,11 +24,11 @@ func RenderTailscale(m models.Model) string {
 	// )
 
 	yes, no := truenas.GetAppStatus(m.TruenasApps)
-	sb.WriteString(fmt.Sprintf("%-15s", "Dodo Apps:"))
+	fmt.Fprintf(&sb, "%-15s", "Dodo Apps:")
 	sb.WriteString(greenBold.Render("\uf00c"))
-	sb.WriteString(fmt.Sprintf(" %d | ", yes))
+	fmt.Fprintf(&sb, " %d | ", yes)
 	sb.WriteString(pinkBold.Render("\uf00d"))
-	sb.WriteString(fmt.Sprintf(" %d\n\n", no))
+	fmt.Fprintf(&sb, " %d\n\n", no)
 
 	configs.TailscaleRenders++
 	if configs.TailscaleRenders >= 5 {
@@ -73,36 +74,15 @@ func RenderTailscale(m models.Model) string {
 			sb.WriteString(nameStyle.Render(" "+shortVersion) + "\n")
 		} else {
 
-			offlineDiff := time.Since(device.LastSeen)
-			diffText := ""
-			if offlineDiff.Hours() >= 24 {
-				days := int(offlineDiff.Hours()) / 24
-				diffText = fmt.Sprintf("%4d d", days)
-			} else if offlineDiff.Hours() >= 1 {
-				hours := int(offlineDiff.Hours())
-				diffText = fmt.Sprintf("%4d H", hours)
-			} else {
-				minutes := int(offlineDiff.Minutes())
-				diffText = fmt.Sprintf("%4d m", minutes)
-			}
-			sb.WriteString(nameStyle.Render(fmt.Sprintf("\uf017 %s", diffText)) + "\n")
+			diffText := common.GetTimeDifferenceString(device.LastSeen)
+			sb.WriteString(nameStyle.Render(fmt.Sprintf("\uf017 %6s", diffText)) + "\n")
 		}
 	}
 
 	offlineDiff := time.Until(m.KeyExpiry)
-	diffText := ""
-	if offlineDiff.Hours() >= 24 {
-		days := int(offlineDiff.Hours()) / 24
-		diffText = fmt.Sprintf("%4d d", days)
-	} else if offlineDiff.Hours() >= 1 {
-		hours := int(offlineDiff.Hours())
-		diffText = fmt.Sprintf("%4d H", hours)
-	} else {
-		minutes := int(offlineDiff.Minutes())
-		diffText = fmt.Sprintf("%4d m", minutes)
-	}
+	diffText := common.GetTimeDifferenceString(m.KeyExpiry)
 	sb.WriteString("\nTailscale key expiry: ")
-	keytext := fmt.Sprintf("%0s", "\uf017 "+diffText)
+	keytext := fmt.Sprintf("%s%6s", "\uf017 ", diffText)
 	if offlineDiff.Hours() < (24 * 4) {
 		sb.WriteString(pinkBold.Render(keytext))
 	} else {
