@@ -56,34 +56,61 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case tickMsg:
 		if configs.TailscaleWaits <= 0 {
+			var errors []error
 			devs := tailscale.TailscaleRequest()
-			m.Devices = devs.(models.TailscaleMsg).Devices
-			m.Misc = devs.(models.TailscaleMsg).Extra
+			if tsMsg, ok := devs.(models.TailscaleMsg); ok {
+				m.Devices = tsMsg.Devices
+				m.Misc = tsMsg.Extra
+			} else {
+				errors = append(errors, devs.(models.ErrMsg).Err)
+			}
 
-			w := weather.WeatherRequest()
-			m.Weather = w.(models.WeatherMsg).Weather
+			weatherMsg := weather.WeatherRequest()
+			if weMsg, ok := weatherMsg.(models.WeatherMsg); ok {
+				m.Weather = weMsg.Weather
+			} else {
+				errors = append(errors, weatherMsg.(models.ErrMsg).Err)
+			}
 
 			waterTemp := weather.GetWaterTemperature()
-			if len(waterTemp.(models.WaterTempMsg).WaterTemp.Embedded.NearestLocations) > 0 {
-				tempLocation := waterTemp.(models.WaterTempMsg).WaterTemp.Embedded.NearestLocations[0]
-				m.WaterTemp = models.WaterTemperatureInternal{
-					Place:       tempLocation.Location.Name,
-					Temperature: tempLocation.Temperature,
-					LastUpdate:  tempLocation.Time,
+			if waMsg, ok := waterTemp.(models.WaterTempMsg); ok {
+				if len(waMsg.WaterTemp.Embedded.NearestLocations) > 0 {
+					tempLocation := waMsg.WaterTemp.Embedded.NearestLocations[0]
+					m.WaterTemp = models.WaterTemperatureInternal{
+						Place:       tempLocation.Location.Name,
+						Temperature: tempLocation.Temperature,
+						LastUpdate:  tempLocation.Time,
+					}
+				} else {
+					m.WaterTemp = models.WaterTemperatureInternal{
+						Place:       "N/A",
+						Temperature: 0.0,
+						LastUpdate:  time.Now(),
+					}
 				}
 			} else {
-				m.WaterTemp = models.WaterTemperatureInternal{
-					Place:       "N/A",
-					Temperature: 0.0,
-					LastUpdate:  time.Now(),
-				}
+				errors = append(errors, waterTemp.(models.ErrMsg).Err)
 			}
 
 			keyExpiry := tailscale.GetKeyExpiry()
-			m.KeyExpiry = keyExpiry.(models.TimeMsg).Time
+			if keyExpMsg, ok := keyExpiry.(models.TimeMsg); ok {
+				m.KeyExpiry = keyExpMsg.Time
+			} else {
+				errors = append(errors, keyExpiry.(models.ErrMsg).Err)
+			}
 
 			apps := truenas.GetApps()
-			m.TruenasApps = apps.(models.TruenasMsg).Apps
+			if tnMsg, ok := apps.(models.TruenasMsg); ok {
+				m.TruenasApps = tnMsg.Apps
+			} else {
+				errors = append(errors, apps.(models.ErrMsg).Err)
+			}
+
+			if len(errors) > 0 {
+				m.ErrorMessage = fmt.Sprintf("E: %s", errors[0].Error())
+			} else {
+				m.ErrorMessage = ""
+			}
 
 			configs.TailscaleWaits = 60
 		}

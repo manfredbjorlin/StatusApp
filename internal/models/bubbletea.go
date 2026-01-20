@@ -3,12 +3,13 @@ package models
 import "time"
 
 type Model struct {
-	Devices     Devices
-	KeyExpiry   time.Time
-	Misc        string
-	Weather     Weather
-	WaterTemp   WaterTemperatureInternal
-	TruenasApps []TruenasApp
+	Devices      Devices
+	KeyExpiry    time.Time
+	Misc         string
+	Weather      Weather
+	WaterTemp    WaterTemperatureInternal
+	TruenasApps  []TruenasApp
+	ErrorMessage string
 }
 
 type (

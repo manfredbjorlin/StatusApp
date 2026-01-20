@@ -56,7 +56,9 @@ func RenderClock(m models.Model) string {
 		m.Weather.Current.FeelsLike,
 	)
 	weatherLine := weather
-	if configs.TailscaleVersion {
+	if len(m.ErrorMessage) > 0 {
+		weatherLine = m.ErrorMessage
+	} else if configs.TailscaleVersion {
 		weatherLine = waterTemps
 	}
 
