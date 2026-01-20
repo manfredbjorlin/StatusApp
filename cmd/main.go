@@ -149,8 +149,8 @@ func (m mainModel) View() string {
 	case configs.ScreenMain:
 		fallthrough
 	default:
-		clock := renderers.RenderClock(m.Model)
 		tailscale := renderers.RenderTailscale(m.Model)
+		clock := renderers.RenderClock(m.Model)
 		result = lipgloss.JoinHorizontal(
 			lipgloss.Left,
 			tailscale,
