@@ -29,7 +29,7 @@ func LoadSchedule(filePath string) ([]Meeting, error) {
 		if len(meetingParts) < 4 {
 			continue // Skip malformed lines
 		}
-		
+
 		mt := meetingParts[0]
 		meetingTime, err := time.Parse("15:04", mt)
 		if err != nil {
