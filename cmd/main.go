@@ -252,7 +252,7 @@ func (m mainModel) View() string {
 
 	// Menu
 	menuStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#808080")).
+		Foreground(lipgloss.Color(configs.ColorDimGrey)).
 		Width(configs.ScheduleStyle.GetWidth()).
 		AlignHorizontal(lipgloss.Center)
 	menu := menuStyle.Render(

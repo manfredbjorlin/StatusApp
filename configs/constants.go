@@ -20,6 +20,7 @@ var (
 	ColorBlue        = "#07a9ff"
 	ColorGreen       = "#a9ff07"
 	ColorGrey        = "#c0c0c0"
+	ColorDimGrey     = "#808080"
 	ColorWhite       = "#FFFFFF"
 	// colorBg          = "#202020"
 	ColorAltBg = "#282828"

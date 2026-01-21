@@ -60,7 +60,7 @@ func View(m any, iconPath string) string {
 		icon = "?"
 	}
 
-	if appModel.DisplayAlternatingText() {
+	if !appModel.DisplayAlternatingText() {
 		sb.WriteString(
 			style.Render(
 				fmt.Sprintf(
