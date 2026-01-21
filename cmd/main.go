@@ -28,9 +28,6 @@ type mainModel struct {
 
 	// UI State
 	width, height   int
-	inMeeting       bool
-	soonMeeting     bool
-	outlined        bool
 	tickCounter     int
 	alternatingText bool
 
@@ -181,7 +178,7 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		if m.tickCounter >= 60 { // Fetch data every 60 seconds
 			m.tickCounter = 0
-			return m, fetchData(m)
+			return m, tea.Batch(fetchData(m), tickCmd())
 		}
 		return m, tickCmd()
 
@@ -202,7 +199,7 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				LastUpdate:  loc.Time,
 			}
 		}
-		return m, tickCmd()
+		return m, nil
 
 	case errMsg:
 		m.err = msg.err
@@ -249,7 +246,7 @@ func (m mainModel) View() string {
 	top := lipgloss.JoinHorizontal(lipgloss.Left, tsView, clockView)
 
 	// Schedule View
-	scheduleView := schedule.View(m.schedule, &m.inMeeting, &m.soonMeeting, &m.outlined)
+	scheduleView := schedule.View(m.schedule)
 
 	mainContent := lipgloss.JoinVertical(lipgloss.Left, top, scheduleView)
 
