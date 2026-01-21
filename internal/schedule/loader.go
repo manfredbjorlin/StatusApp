@@ -7,33 +7,29 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"StatusApp/internal/models"
 )
 
-func LoadSchedule() []models.Meeting {
-	m := make([]models.Meeting, 0)
+func LoadSchedule(filePath string) ([]Meeting, error) {
+	m := make([]Meeting, 0)
 
-	fileLocation := os.Getenv("SCHEDULE_FILE_PATH")
-	file, err := os.Open(fileLocation)
+	file, err := os.Open(filePath)
 	if err != nil {
-		panic("Could not find schedule file")
+		return nil, fmt.Errorf("could not find or open schedule file: %w", err)
 	}
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			panic(fmt.Sprintf("error closing file: %v", err))
-		}
-	}(file)
+	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		meeting := models.Meeting{}
+		meeting := Meeting{}
 		if len(scanner.Text()) < 2 {
 			continue
 		}
 
 		meetingParts := strings.Split(scanner.Text(), "##")
+		if len(meetingParts) < 4 {
+			continue // Skip malformed lines
+		}
+		
 		mt := meetingParts[0]
 		meetingTime, err := time.Parse("15:04", mt)
 		if err != nil {
@@ -60,7 +56,9 @@ func LoadSchedule() []models.Meeting {
 
 		if strings.Contains(currentRoom, "M OSL Schweigaards") {
 			p := strings.Split(currentRoom, " ")
-			currentRoom = p[5]
+			if len(p) > 5 {
+				currentRoom = p[5]
+			}
 		} else if strings.Contains(currentRoom, "Microsoft Teams") {
 			currentRoom = "Teams"
 		}
@@ -74,5 +72,5 @@ func LoadSchedule() []models.Meeting {
 		return m[i].Time.Before(m[j].Time)
 	})
 
-	return m
+	return m, nil
 }

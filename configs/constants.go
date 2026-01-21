@@ -3,7 +3,6 @@ package configs
 import "github.com/charmbracelet/lipgloss"
 
 const (
-	BaseUrl    = "https://api.tailscale.com/api/v2"
 	DateFormat = "2. January 2006"
 )
 

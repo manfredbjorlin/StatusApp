@@ -1,9 +1,10 @@
-package models
+package truenas
 
-type TruenasApp struct {
+// App represents a single application running on TrueNAS.
+type App struct {
 	Id               string            `json:"id"`
 	Name             string            `json:"name"`
-	State            string            `json:"state"`
+	State            string            `json:"state"` // Should be "ACTIVE" or "STOPPED"
 	UpgradeAvailable bool              `json:"upgrade_available"`
 	LatestVersion    string            `json:"latest_version"`
 	Version          string            `json:"version"`

@@ -1,13 +1,45 @@
-package models
+package weather
 
 import "time"
 
+// --- WeatherAPI Structures ---
+
+// Weathercode maps a condition code to its description and icon.
+type Weathercode struct {
+	Code  int    `json:"code"`
+	Day   string `json:"day"`
+	Night string `json:"night"`
+	Icon  int    `json:"icon"`
+}
+
+// Weather represents the top-level response from the WeatherAPI.
+type Weather struct {
+	Current Current `json:"current"`
+}
+
+// Current holds the current weather conditions.
+type Current struct {
+	Condition Condition `json:"condition"`
+	Temp      float32   `json:"temp_c"`
+	FeelsLike float32   `json:"feelslike_c"`
+	IsDay     int       `json:"is_day"`
+}
+
+// Condition holds the specific weather condition code.
+type Condition struct {
+	Code int `json:"code"`
+}
+
+// --- Water Temperature (YR.no) Structures ---
+
+// WaterTemperatureInternal is a simplified struct for application use.
 type WaterTemperatureInternal struct {
 	Place       string
 	Temperature float64
 	LastUpdate  time.Time
 }
 
+// WaterTemperature represents the full, complex response from the YR.no API.
 type WaterTemperature struct {
 	Embedded struct {
 		NearestLocations []struct {
