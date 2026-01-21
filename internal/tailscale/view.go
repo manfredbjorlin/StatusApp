@@ -14,39 +14,25 @@ import (
 	"StatusApp/internal/truenas"
 )
 
-// View renders the Tailscale status information.
-// Note: This function has dependencies on other parts of the model (like truenas).
-// A future refactoring could be to pass only the necessary data to this function
-// to make it more self-contained.
-func View(m interface{}) string {
-	// This is a temporary solution to handle the model dependency.
-	// The ideal approach would be to define a clear model/viewmodel in main.go
-	// and pass only the required data.
-	type modelWithData interface {
-		GetTruenasApps() []truenas.App
-		GetTailscaleDevices() Devices
-		GetKeyExpiry() time.Time
-		DisplayAlternatingText() bool
-	}
-
-	appModel, ok := m.(modelWithData)
-	if !ok {
-		return "Error: Could not render Tailscale view due to model mismatch"
-	}
-
+func View(
+	devices []Device,
+	keyExpiry time.Time,
+	truenasApps []truenas.App,
+	alternatingText bool,
+) string {
 	var sb strings.Builder
 	greenBold := lipgloss.NewStyle().Bold(true).Foreground(configs.BrightGreen)
 
 	pinkBold := lipgloss.NewStyle().Bold(true).Foreground(configs.HotPink)
 
-	yes, no := truenas.GetAppStatus(appModel.GetTruenasApps())
+	yes, no := truenas.GetAppStatus(truenasApps)
 	fmt.Fprintf(&sb, "% -15s", "Dodo Apps:")
 	sb.WriteString(greenBold.Render("\uf00c"))
 	fmt.Fprintf(&sb, " %d | ", yes)
 	sb.WriteString(pinkBold.Render("\uf00d"))
 	fmt.Fprintf(&sb, " %d\n\n", no)
 
-	for i, device := range appModel.GetTailscaleDevices().Devices {
+	for i, device := range devices {
 		deviceIcon := ""
 		switch device.Os {
 		case "linux":
@@ -69,7 +55,7 @@ func View(m interface{}) string {
 		nameStyle = configs.SetBg(nameStyle, i)
 		sb.WriteString(nameStyle.Render(fmt.Sprintf(" % -20s", name)))
 
-		if device.ConnectedToControl || !appModel.DisplayAlternatingText() {
+		if device.ConnectedToControl || !alternatingText {
 			updateStyle := greenBold
 			updateLogo := "\uf00c"
 
@@ -90,7 +76,6 @@ func View(m interface{}) string {
 		}
 	}
 
-	keyExpiry := appModel.GetKeyExpiry()
 	offlineDiff := time.Until(keyExpiry)
 	diffText := common.GetTimeDifferenceString(keyExpiry)
 	sb.WriteString("\nTailscale key expiry: ")

@@ -16,37 +16,20 @@ import (
 	"StatusApp/internal/tailscale"
 	"StatusApp/internal/truenas"
 	"StatusApp/internal/weather"
+	"StatusApp/pkg/core"
 )
 
 // --- Model ---
 
-type mainModel struct {
-	// Clients
-	tsClient      tailscale.MachineGetter
-	weatherClient weather.DataProvider
-	truenasClient truenas.AppGetter
-
-	// UI State
-	width, height   int
-	tickCounter     int
-	alternatingText bool
-
-	// Data
-	err              error
-	lastUpdated      time.Time
-	schedule         []schedule.Meeting
-	tailscaleDevices tailscale.Devices
-	tailscaleKey     time.Time
-	truenasApps      []truenas.App
-	weather          weather.Weather
-	waterTemperature weather.WaterTemperatureInternal
+type MainModel struct {
+	Model core.MainModel
 }
 
-func newModel() mainModel {
+func newModel() MainModel {
 	// Load environment variables
-	tsAPIKey := os.Getenv("TAILSCALE_API_KEY")
-	tsTailnet := os.Getenv("TAILSCALE_TAILNET_ID")
-	tsKeyID := os.Getenv("TAILSCALE_API_KEY_ID")
+	tailscaleAPIKey := os.Getenv("TAILSCALE_API_KEY")
+	tailscaleTailnet := os.Getenv("TAILSCALE_TAILNET_ID")
+	tailscaleKeyID := os.Getenv("TAILSCALE_API_KEY_ID")
 	weatherAPIKey := os.Getenv("WEATHERAPI_API_KEY")
 	weatherLocation := os.Getenv("WEATHERAPI_LOCATION")
 	waterLocationID := os.Getenv("WATERTEMPERATURE_LOCATION_ID")
@@ -54,16 +37,18 @@ func newModel() mainModel {
 	truenasAPIKey := os.Getenv("TRUENAS_API_KEY")
 
 	// Initialize clients
-	tsClient := tailscale.NewClient(tsAPIKey, tsTailnet, tsKeyID)
+	tailscaleClient := tailscale.NewClient(tailscaleAPIKey, tailscaleTailnet, tailscaleKeyID)
 	weatherClient := weather.NewClient(weatherAPIKey, weatherLocation, waterLocationID)
 	truenasClient := truenas.NewClient(truenasURL, truenasAPIKey)
 
-	return mainModel{
-		tsClient:        tsClient,
-		weatherClient:   weatherClient,
-		truenasClient:   truenasClient,
-		tickCounter:     60, // Start ready to fetch
-		alternatingText: false,
+	return MainModel{
+		Model: core.MainModel{
+			TailscaleClient: tailscaleClient,
+			WeatherClient:   weatherClient,
+			TruenasClient:   truenasClient,
+			TickCounter:     60, // Start ready to fetch
+			AlternatingText: false,
+		},
 	}
 }
 
@@ -71,18 +56,16 @@ func newModel() mainModel {
 
 type (
 	tickMsg        time.Time
-	errMsg         struct{ err error }
+	errorMsg       struct{ err error }
 	fetchedDataMsg struct {
-		tsDevices tailscale.Devices
-		tsKey     time.Time
-		tnApps    []truenas.App
-		weather   weather.Weather
-		waterTemp weather.WaterTemperature
-		schedule  []schedule.Meeting
+		tailscaleDevices   tailscale.Devices
+		tailscaleKeyExpiry time.Time
+		truenasApps        []truenas.App
+		weather            weather.Weather
+		waterTemperature   weather.WaterTemperature
+		schedule           []schedule.Meeting
 	}
 )
-
-func (e errMsg) Error() string { return e.err.Error() }
 
 // --- Commands ---
 
@@ -92,7 +75,7 @@ func tickCmd() tea.Cmd {
 	})
 }
 
-func fetchData(m mainModel) tea.Cmd {
+func fetchData(m MainModel) tea.Cmd {
 	return func() tea.Msg {
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
@@ -109,30 +92,30 @@ func fetchData(m mainModel) tea.Cmd {
 		errs := make(chan error, 5)
 
 		go func() {
-			tsDevices, err = m.tsClient.GetMachines(ctx)
+			tsDevices, err = m.Model.TailscaleClient.GetMachines(ctx)
 			errs <- err
 		}()
 		go func() {
-			tsKey, err = m.tsClient.GetKeyExpiry(ctx)
+			tsKey, err = m.Model.TailscaleClient.GetKeyExpiry(ctx)
 			errs <- err
 		}()
 		go func() {
-			tnApps, err = m.truenasClient.GetApps(ctx)
+			tnApps, err = m.Model.TruenasClient.GetApps(ctx)
 			errs <- err
 		}()
 		go func() {
-			weatherData, err = m.weatherClient.GetCurrentWeather(ctx)
+			weatherData, err = m.Model.WeatherClient.GetCurrentWeather(ctx)
 			errs <- err
 		}()
 		go func() {
-			waterTempData, err = m.weatherClient.GetWaterTemperature(ctx)
+			waterTempData, err = m.Model.WeatherClient.GetWaterTemperature(ctx)
 			errs <- err
 		}()
 
 		// Process results
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			if err := <-errs; err != nil {
-				return errMsg{err} // Return on the first error
+				return errorMsg{err} // Return on the first error
 			}
 		}
 
@@ -140,60 +123,56 @@ func fetchData(m mainModel) tea.Cmd {
 		scheduleFile := os.Getenv("SCHEDULE_FILE_PATH")
 		scheduleData, err = schedule.LoadSchedule(scheduleFile)
 		if err != nil {
-			return errMsg{err}
+			return errorMsg{err}
 		}
 
 		return fetchedDataMsg{
-			tsDevices: tsDevices,
-			tsKey:     tsKey,
-			tnApps:    tnApps,
-			weather:   weatherData,
-			waterTemp: waterTempData,
-			schedule:  scheduleData,
+			tailscaleDevices:   tsDevices,
+			tailscaleKeyExpiry: tsKey,
+			truenasApps:        tnApps,
+			weather:            weatherData,
+			waterTemperature:   waterTempData,
+			schedule:           scheduleData,
 		}
 	}
 }
 
 // --- Bubbletea Program ---
 
-func (m mainModel) Init() tea.Cmd {
-	// return tea.Batch(tickCmd(), fetchData(m))
+func (m MainModel) Init() tea.Cmd {
 	return tickCmd()
 }
 
-func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
-		// Also update legacy configs for now
-		configs.WindowWidth = msg.Width
-		configs.WindowHeight = msg.Height
+		m.Model.WindowWidth = msg.Width
+		m.Model.WindowHeight = msg.Height
 		return m, nil
 
 	case tickMsg:
-		m.tickCounter++
-		if m.tickCounter%5 == 0 {
-			m.alternatingText = !m.alternatingText
+		m.Model.TickCounter++
+		if m.Model.TickCounter%configs.SecondsBetweenAlternatingText == 0 {
+			m.Model.AlternatingText = !m.Model.AlternatingText
 		}
-		if m.tickCounter >= 60 { // Fetch data every 60 seconds
-			m.tickCounter = 0
+		if m.Model.TickCounter >= configs.SecondsBetweenRefresh {
+			m.Model.TickCounter = 0
 			return m, tea.Batch(fetchData(m), tickCmd())
 		}
 		return m, tickCmd()
 
 	case fetchedDataMsg:
-		m.err = nil
-		m.lastUpdated = time.Now()
-		m.tailscaleDevices = msg.tsDevices
-		m.tailscaleKey = msg.tsKey
-		m.truenasApps = msg.tnApps
-		m.weather = msg.weather
-		m.schedule = msg.schedule
+		m.Model.Error = nil
+		m.Model.LastUpdated = time.Now()
+		m.Model.TailscaleDevices = msg.tailscaleDevices
+		m.Model.TailscaleKeyExpiry = msg.tailscaleKeyExpiry
+		m.Model.TruenasApps = msg.truenasApps
+		m.Model.Weather = msg.weather
+		m.Model.Schedule = msg.schedule
 
-		if len(msg.waterTemp.Embedded.NearestLocations) > 0 {
-			loc := msg.waterTemp.Embedded.NearestLocations[0]
-			m.waterTemperature = weather.WaterTemperatureInternal{
+		if len(msg.waterTemperature.Embedded.NearestLocations) > 0 {
+			loc := msg.waterTemperature.Embedded.NearestLocations[0]
+			m.Model.WaterTemperature = weather.WaterTemperatureInternal{
 				Place:       loc.Location.Name,
 				Temperature: loc.Temperature,
 				LastUpdate:  loc.Time,
@@ -201,8 +180,8 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
-	case errMsg:
-		m.err = msg.err
+	case errorMsg:
+		m.Model.Error = msg.err
 		return m, nil
 
 	case tea.KeyMsg:
@@ -210,43 +189,43 @@ func (m mainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "ctrl+c":
 			return m, tea.Quit
 		case "r": // Force refresh
-			m.tickCounter = 60
+			m.Model.TickCounter = configs.SecondsBetweenRefresh
 			return m, nil
 		}
 	}
 	return m, nil
 }
 
-// Implement local interfaces for the view functions
-func (m mainModel) GetTruenasApps() []truenas.App          { return m.truenasApps }
-func (m mainModel) GetTailscaleDevices() tailscale.Devices { return m.tailscaleDevices }
-func (m mainModel) GetKeyExpiry() time.Time                { return m.tailscaleKey }
-func (m mainModel) GetWeather() weather.Weather            { return m.weather }
-func (m mainModel) GetWaterTemperature() weather.WaterTemperatureInternal {
-	return m.waterTemperature
-}
-func (m mainModel) DisplayAlternatingText() bool { return m.alternatingText }
-
-func (m mainModel) View() string {
-	if m.width == 0 || m.height == 0 {
+func (m MainModel) View() string {
+	if m.Model.WindowWidth == 0 || m.Model.WindowHeight == 0 {
 		return "Initializing..."
 	}
 
 	// Weather View (Simplified)
 	iconPath := os.Getenv("WEATHER_ICON_PATH")
-	weatherView := weather.View(m, iconPath)
+	weatherView := weather.View(
+		m.Model.Weather,
+		m.Model.WaterTemperature,
+		m.Model.AlternatingText,
+		iconPath,
+	)
 
 	// Clock View
 	clockView := clock.RenderClock(weatherView)
 
 	// Tailscale View
-	tsView := tailscale.View(m)
+	tailscaleView := tailscale.View(
+		m.Model.TailscaleDevices.Devices,
+		m.Model.TailscaleKeyExpiry,
+		m.Model.TruenasApps,
+		m.Model.AlternatingText,
+	)
 
 	// Top section
-	top := lipgloss.JoinHorizontal(lipgloss.Left, tsView, clockView)
+	top := lipgloss.JoinHorizontal(lipgloss.Left, tailscaleView, clockView)
 
 	// Schedule View
-	scheduleView := schedule.View(m.schedule)
+	scheduleView := schedule.View(m.Model.Schedule)
 
 	mainContent := lipgloss.JoinVertical(lipgloss.Left, top, scheduleView)
 
@@ -256,12 +235,21 @@ func (m mainModel) View() string {
 		Width(configs.ScheduleStyle.GetWidth()).
 		AlignHorizontal(lipgloss.Center)
 	menu := menuStyle.Render(
-		fmt.Sprintf("q: quit | r: refresh | Last update: %s", m.lastUpdated.Format("15:04:05")),
+		fmt.Sprintf(
+			"q: quit | r: refresh | Last update: %s",
+			m.Model.LastUpdated.Format("15:04:05"),
+		),
 	)
 
 	final := lipgloss.JoinVertical(lipgloss.Top, mainContent, menu)
 
-	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, final)
+	return lipgloss.Place(
+		m.Model.WindowWidth,
+		m.Model.WindowHeight,
+		lipgloss.Center,
+		lipgloss.Center,
+		final,
+	)
 }
 
 func main() {

@@ -3,7 +3,6 @@ package weather
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -37,30 +36,21 @@ func getWeatherIcon(code int, isDay int, iconPath string) (string, error) {
 }
 
 // View renders the weather information.
-func View(m any, iconPath string) string {
-	type modelWithData interface {
-		GetWeather() Weather
-		GetWaterTemperature() WaterTemperatureInternal
-		DisplayAlternatingText() bool
-	}
-
-	appModel, ok := m.(modelWithData)
-	if !ok {
-		log.Println("Weather view: model mismatch")
-		return "Error: Could not render Weather view due to model mismatch"
-	}
-
+func View(
+	weather Weather,
+	waterTemp WaterTemperatureInternal,
+	alternatingText bool,
+	iconPath string,
+) string {
 	var sb strings.Builder
 	var style lipgloss.Style
-	weather := appModel.GetWeather()
-	waterTemp := appModel.GetWaterTemperature()
 
 	icon, err := getWeatherIcon(weather.Current.Condition.Code, weather.Current.IsDay, iconPath)
 	if err != nil {
 		icon = "?"
 	}
 
-	if !appModel.DisplayAlternatingText() {
+	if alternatingText {
 		sb.WriteString(
 			style.Render(
 				fmt.Sprintf(
