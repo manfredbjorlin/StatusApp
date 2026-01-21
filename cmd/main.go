@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"time"
@@ -21,11 +20,11 @@ import (
 
 // --- Model ---
 
-type MainModel struct {
+type BubbleTeaModel struct {
 	Model core.MainModel
 }
 
-func newModel() MainModel {
+func newModel() BubbleTeaModel {
 	// Load environment variables
 	tailscaleAPIKey := os.Getenv("TAILSCALE_API_KEY")
 	tailscaleTailnet := os.Getenv("TAILSCALE_TAILNET_ID")
@@ -41,7 +40,7 @@ func newModel() MainModel {
 	weatherClient := weather.NewClient(weatherAPIKey, weatherLocation, waterLocationID)
 	truenasClient := truenas.NewClient(truenasURL, truenasAPIKey)
 
-	return MainModel{
+	return BubbleTeaModel{
 		Model: core.MainModel{
 			TailscaleClient: tailscaleClient,
 			WeatherClient:   weatherClient,
@@ -75,75 +74,13 @@ func tickCmd() tea.Cmd {
 	})
 }
 
-func fetchData(m MainModel) tea.Cmd {
-	return func() tea.Msg {
-		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-		defer cancel()
-
-		var tsDevices tailscale.Devices
-		var tsKey time.Time
-		var tnApps []truenas.App
-		var weatherData weather.Weather
-		var waterTempData weather.WaterTemperature
-		var scheduleData []schedule.Meeting
-		var err error
-
-		// Run fetches in parallel
-		errs := make(chan error, 5)
-
-		go func() {
-			tsDevices, err = m.Model.TailscaleClient.GetMachines(ctx)
-			errs <- err
-		}()
-		go func() {
-			tsKey, err = m.Model.TailscaleClient.GetKeyExpiry(ctx)
-			errs <- err
-		}()
-		go func() {
-			tnApps, err = m.Model.TruenasClient.GetApps(ctx)
-			errs <- err
-		}()
-		go func() {
-			weatherData, err = m.Model.WeatherClient.GetCurrentWeather(ctx)
-			errs <- err
-		}()
-		go func() {
-			waterTempData, err = m.Model.WeatherClient.GetWaterTemperature(ctx)
-			errs <- err
-		}()
-
-		// Process results
-		for range 5 {
-			if err := <-errs; err != nil {
-				return errorMsg{err} // Return on the first error
-			}
-		}
-
-		// Schedule is loaded synchronously as it's a file read
-		scheduleFile := os.Getenv("SCHEDULE_FILE_PATH")
-		scheduleData, err = schedule.LoadSchedule(scheduleFile)
-		if err != nil {
-			return errorMsg{err}
-		}
-
-		return fetchedDataMsg{
-			tailscaleDevices:   tsDevices,
-			tailscaleKeyExpiry: tsKey,
-			truenasApps:        tnApps,
-			weather:            weatherData,
-			waterTemperature:   waterTempData,
-			schedule:           scheduleData,
-		}
-	}
-}
-
 // --- Bubbletea Program ---
 
-func (m MainModel) Init() tea.Cmd {
+func (m BubbleTeaModel) Init() tea.Cmd {
 	return tickCmd()
 }
 
-func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.Model.WindowWidth = msg.Width
@@ -151,35 +88,9 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tickMsg:
-		m.Model.TickCounter++
-		if m.Model.TickCounter%configs.SecondsBetweenAlternatingText == 0 {
-			m.Model.AlternatingText = !m.Model.AlternatingText
-		}
-		if m.Model.TickCounter >= configs.SecondsBetweenRefresh {
-			m.Model.TickCounter = 0
-			return m, tea.Batch(fetchData(m), tickCmd())
-		}
-		return m, tickCmd()
-
+		return tickUpdate(m)
 	case fetchedDataMsg:
-		m.Model.Error = nil
-		m.Model.LastUpdated = time.Now()
-		m.Model.TailscaleDevices = msg.tailscaleDevices
-		m.Model.TailscaleKeyExpiry = msg.tailscaleKeyExpiry
-		m.Model.TruenasApps = msg.truenasApps
-		m.Model.Weather = msg.weather
-		m.Model.Schedule = msg.schedule
-
-		if len(msg.waterTemperature.Embedded.NearestLocations) > 0 {
-			loc := msg.waterTemperature.Embedded.NearestLocations[0]
-			m.Model.WaterTemperature = weather.WaterTemperatureInternal{
-				Place:       loc.Location.Name,
-				Temperature: loc.Temperature,
-				LastUpdate:  loc.Time,
-			}
-		}
-		return m, nil
-
+		return mapFetchedData(m, msg)
 	case errorMsg:
 		m.Model.Error = msg.err
 		return m, nil
@@ -196,7 +107,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m MainModel) View() string {
+func (m BubbleTeaModel) View() string {
 	if m.Model.WindowWidth == 0 || m.Model.WindowHeight == 0 {
 		return "Initializing..."
 	}
