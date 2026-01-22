@@ -52,7 +52,8 @@ func View(meetings []Meeting) string {
 			}
 			firstLine = false
 		} else {
-			if i >= 5 {
+			if i > configs.MaxScheduleEvents {
+				numMeetings++
 				break
 			}
 			fmt.Fprintf(&sb, "%s - %s  %-58s%s", meeting.Time.Format("15:04"), meeting.End.Format("15:04"), meeting.Title, meeting.Room)
@@ -65,6 +66,8 @@ func View(meetings []Meeting) string {
 		sb.WriteString("No more meetings today!")
 		soonMeeting = false
 		inMeeting = false
+	} else if numMeetings < configs.MaxScheduleEvents {
+		sb.WriteString(strings.Repeat(" ", 15) + configs.BoldText.Render("< EOF >"))
 	}
 
 	// Determine style based on state

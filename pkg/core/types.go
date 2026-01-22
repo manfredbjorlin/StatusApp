@@ -29,4 +29,5 @@ type MainModel struct {
 	TruenasApps        []truenas.App
 	Weather            weather.Weather
 	WaterTemperature   weather.WaterTemperatureInternal
+	TruenasUpdateList  map[int]string
 }

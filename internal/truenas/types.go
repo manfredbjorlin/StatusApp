@@ -10,4 +10,10 @@ type App struct {
 	Version          string            `json:"version"`
 	HumanVersion     string            `json:"human_version"`
 	Portals          map[string]string `json:"portals"`
+	UpdateId         int
+}
+
+type appUpdater struct {
+	AppName string      `json:"app_name"`
+	Options interface{} `json:"options"`
 }

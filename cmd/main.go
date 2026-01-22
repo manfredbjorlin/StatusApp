@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -21,7 +22,8 @@ import (
 // --- Model ---
 
 type BubbleTeaModel struct {
-	Model core.MainModel
+	CurrentScreen configs.Screen
+	Model         core.MainModel
 }
 
 func newModel() BubbleTeaModel {
@@ -41,6 +43,7 @@ func newModel() BubbleTeaModel {
 	truenasClient := truenas.NewClient(truenasURL, truenasAPIKey)
 
 	return BubbleTeaModel{
+		CurrentScreen: configs.ScreenMain,
 		Model: core.MainModel{
 			TailscaleClient: tailscaleClient,
 			WeatherClient:   weatherClient,
@@ -101,7 +104,15 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "r": // Force refresh
 			m.Model.TickCounter = configs.SecondsBetweenRefresh
-			return m, nil
+		case "a":
+			m.CurrentScreen = configs.ScreenApps
+		case "m":
+			m.CurrentScreen = configs.ScreenMain
+		}
+		number, err := strconv.Atoi(msg.String())
+		if m.CurrentScreen == configs.ScreenApps && err == nil {
+			_ = m.Model.TruenasClient.UpdateApp(m.Model.TruenasApps, number)
+			m.Model.TickCounter = configs.SecondsBetweenRefresh
 		}
 	}
 	return m, nil
@@ -124,16 +135,20 @@ func (m BubbleTeaModel) View() string {
 	// Clock View
 	clockView := clock.RenderClock(weatherView)
 
-	// Tailscale View
-	tailscaleView := tailscale.View(
-		m.Model.TailscaleDevices.Devices,
-		m.Model.TailscaleKeyExpiry,
-		m.Model.TruenasApps,
-		m.Model.AlternatingText,
-	)
+	var topLeft string
+	if m.CurrentScreen == configs.ScreenMain {
+		topLeft = tailscale.View(
+			m.Model.TailscaleDevices.Devices,
+			m.Model.TailscaleKeyExpiry,
+			m.Model.TruenasApps,
+			m.Model.AlternatingText,
+		)
+	} else {
+		topLeft = truenas.View(m.Model.TruenasApps)
+	}
 
 	// Top section
-	top := lipgloss.JoinHorizontal(lipgloss.Left, tailscaleView, clockView)
+	top := lipgloss.JoinHorizontal(lipgloss.Left, topLeft, clockView)
 
 	// Schedule View
 	scheduleView := schedule.View(m.Model.Schedule)
@@ -147,7 +162,7 @@ func (m BubbleTeaModel) View() string {
 		AlignHorizontal(lipgloss.Center)
 	menu := menuStyle.Render(
 		fmt.Sprintf(
-			"q: quit | r: refresh | Last update: %s",
+			"q: quit | r: refresh | a: apps | m: main screen | Last update: %s",
 			m.Model.LastUpdated.Format("15:04:05"),
 		),
 	)

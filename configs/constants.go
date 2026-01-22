@@ -6,10 +6,10 @@ const (
 	DateFormat                    = "2. January 2006"
 	SecondsBetweenRefresh         = 60
 	SecondsBetweenAlternatingText = 5
+	MaxScheduleEvents             = 4
 )
 
 var (
-	CurrentScreen    = ScreenMain
 	TailscaleWaits   = 0
 	SoonMeeting      = false
 	InMeeting        = false
@@ -56,8 +56,10 @@ var (
 			Foreground(HeaderText)
 )
 
+type Screen int
+
 const (
-	ScreenMain = iota
+	ScreenMain Screen = iota
 	ScreenApps
 )
 
