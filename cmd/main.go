@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -63,7 +64,7 @@ type (
 		tailscaleDevices   tailscale.Devices
 		tailscaleKeyExpiry time.Time
 		truenasApps        []truenas.App
-		weather            weather.Weather
+		weather            *weather.WeatherForecastInternal
 		waterTemperature   weather.WaterTemperature
 		schedule           []schedule.Meeting
 	}
@@ -123,16 +124,22 @@ func (m BubbleTeaModel) View() string {
 		return "Initializing..."
 	}
 
-	// Weather View (Simplified)
-	iconPath := os.Getenv("WEATHER_ICON_PATH")
+	if m.Model.Error != nil {
+		return lipgloss.Place(
+			m.Model.WindowWidth,
+			m.Model.WindowHeight,
+			lipgloss.Center,
+			lipgloss.Center,
+			fmt.Sprintf("Error: %s", m.Model.Error.Error()),
+		)
+	}
+
 	weatherView := weather.View(
 		m.Model.Weather,
 		m.Model.WaterTemperature,
 		m.Model.AlternatingText,
-		iconPath,
 	)
 
-	// Clock View
 	clockView := clock.RenderClock(weatherView)
 
 	var topLeft string
@@ -147,29 +154,29 @@ func (m BubbleTeaModel) View() string {
 		topLeft = truenas.View(m.Model.TruenasApps)
 	}
 
-	// Top section
 	top := lipgloss.JoinHorizontal(lipgloss.Left, topLeft, clockView)
 
-	// Schedule View
 	scheduleView := schedule.View(m.Model.Schedule)
 
 	mainContent := lipgloss.JoinVertical(lipgloss.Left, top, scheduleView)
 
-	// Menu
-	menuStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color(configs.ColorDimGrey)).
-		Width(configs.ScheduleStyle.GetWidth()).
-		AlignHorizontal(lipgloss.Center)
-	menu := menuStyle.Render(
-		fmt.Sprintf(
-			"%s: quit | %s: refresh | %s: apps | %s: main screen | Last update: %s",
-			getWhiteBold("q"),
-			getWhiteBold("r"),
-			getWhiteBold("a"),
-			getWhiteBold("m"),
-			m.Model.LastUpdated.Format("15:04:05"),
-		),
-	)
+	menuItems := map[string]string{
+		"q": "quit",
+		"r": "refresh",
+		"a": "apps",
+		"m": "main screen",
+		"e": "exclude",
+	}
+	var menuItemOrder []string
+	switch m.CurrentScreen {
+	case configs.ScreenMain:
+		menuItemOrder = []string{"q", "r", "a"}
+	case configs.ScreenApps:
+		menuItemOrder = []string{"q", "r", "m"}
+
+	}
+
+	menu := renderMenu(menuItems, menuItemOrder, m.Model.LastUpdated)
 
 	final := lipgloss.JoinVertical(lipgloss.Top, mainContent, menu)
 
@@ -182,9 +189,24 @@ func (m BubbleTeaModel) View() string {
 	)
 }
 
-func getWhiteBold(input string) string {
-	bold := configs.BoldText.Foreground(configs.NiceBlue)
-	return bold.Render(input)
+func renderMenu(items map[string]string, keyOrder []string, lastUpdated time.Time) string {
+	var sb strings.Builder
+	hotKeyStyle := configs.BoldText.Foreground(configs.NiceBlue)
+	menuTextStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(configs.ColorDimGrey))
+	menuStyle := lipgloss.NewStyle().
+		Width(configs.ScheduleStyle.GetWidth()).
+		AlignHorizontal(lipgloss.Center)
+
+	for _, value := range keyOrder {
+		if text, ok := items[value]; ok {
+			sb.WriteString(hotKeyStyle.Render(value))
+			sb.WriteString(menuTextStyle.Render(fmt.Sprintf(": %s | ", text)))
+		}
+	}
+
+	return menuStyle.Render(sb.String() + menuTextStyle.Render(
+		fmt.Sprintf("Last update: %s", lastUpdated.Format("15:04:05")),
+	))
 }
 
 func main() {

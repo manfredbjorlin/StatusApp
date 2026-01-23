@@ -23,14 +23,22 @@ type Current struct {
 	Temp      float32   `json:"temp_c"`
 	FeelsLike float32   `json:"feelslike_c"`
 	IsDay     int       `json:"is_day"`
+	Location  string
 }
 
 // Condition holds the specific weather condition code.
 type Condition struct {
-	Code int `json:"code"`
+	Code int    `json:"code"`
+	Text string `json:"text"`
 }
 
-// --- Water Temperature (YR.no) Structures ---
+type WeatherForecastInternal struct {
+	Icon        string
+	Text        string
+	Location    string
+	Temperature float32
+	ExtraInfo   string
+}
 
 // WaterTemperatureInternal is a simplified struct for application use.
 type WaterTemperatureInternal struct {

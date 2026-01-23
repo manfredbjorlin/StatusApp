@@ -27,7 +27,7 @@ type MainModel struct {
 	TailscaleDevices   tailscale.Devices
 	TailscaleKeyExpiry time.Time
 	TruenasApps        []truenas.App
-	Weather            weather.Weather
+	Weather            *weather.WeatherForecastInternal
 	WaterTemperature   weather.WaterTemperatureInternal
 	TruenasUpdateList  map[int]string
 }

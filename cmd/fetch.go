@@ -41,7 +41,7 @@ func fetchData(m BubbleTeaModel) tea.Cmd {
 		var tsDevices tailscale.Devices
 		var tsKey time.Time
 		var tnApps []truenas.App
-		var weatherData weather.Weather
+		var weatherData *weather.WeatherForecastInternal
 		var waterTempData weather.WaterTemperature
 		var scheduleData []schedule.Meeting
 		var err error
