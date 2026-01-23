@@ -162,7 +162,11 @@ func (m BubbleTeaModel) View() string {
 		AlignHorizontal(lipgloss.Center)
 	menu := menuStyle.Render(
 		fmt.Sprintf(
-			"q: quit | r: refresh | a: apps | m: main screen | Last update: %s",
+			"%s: quit | %s: refresh | %s: apps | %s: main screen | Last update: %s",
+			getWhiteBold("q"),
+			getWhiteBold("r"),
+			getWhiteBold("a"),
+			getWhiteBold("m"),
 			m.Model.LastUpdated.Format("15:04:05"),
 		),
 	)
@@ -176,6 +180,11 @@ func (m BubbleTeaModel) View() string {
 		lipgloss.Center,
 		final,
 	)
+}
+
+func getWhiteBold(input string) string {
+	bold := configs.BoldText.Foreground(configs.NiceBlue)
+	return bold.Render(input)
 }
 
 func main() {

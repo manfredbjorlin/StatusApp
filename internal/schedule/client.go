@@ -38,9 +38,6 @@ func LoadSchedule(filePath string) ([]Meeting, error) {
 		meeting.Time = meetingTime
 		meeting.End, _ = time.Parse("15:04", meetingParts[3])
 		meeting.Title = meetingParts[1]
-		if len(meeting.Title) > 55 {
-			meeting.Title = meeting.Title[:50] + "..."
-		}
 
 		rooms := strings.Split(meetingParts[2], ";")
 		currentRoom := strings.TrimSpace(meetingParts[2])

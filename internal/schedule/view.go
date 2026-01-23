@@ -18,6 +18,8 @@ func View(meetings []Meeting) string {
 	inMeeting := false
 	soonMeeting := false
 	nowTime, err := time.Parse("15:04", time.Now().Format("15:04"))
+	totalWidth := configs.ScheduleStyle.GetWidth() - (2 * configs.ScheduleStyle.GetPaddingLeft())
+	timeWidth := len("10:00 - 10:00  ")
 
 	for i, meeting := range meetings {
 		if err != nil {
@@ -31,14 +33,21 @@ func View(meetings []Meeting) string {
 			soonMeeting = false
 		}
 
+		roomWidth := len(meeting.Room) + 2
+		titleMaxWidth := totalWidth - timeWidth - roomWidth
+		if len(meeting.Title) > titleMaxWidth {
+			meeting.Title = meeting.Title[:titleMaxWidth-3] + "..."
+		}
+
 		if firstLine {
 			sb.WriteString(
 				configs.BoldText.Render(
 					fmt.Sprintf(
-						"%s - %s  %-58s%s",
+						"%s - %s  %s%s  %s",
 						meeting.Time.Format("15:04"),
 						meeting.End.Format("15:04"),
 						meeting.Title,
+						strings.Repeat(" ", titleMaxWidth-len(meeting.Title)),
 						meeting.Room,
 					),
 				),
@@ -56,7 +65,7 @@ func View(meetings []Meeting) string {
 				numMeetings++
 				break
 			}
-			fmt.Fprintf(&sb, "%s - %s  %-58s%s", meeting.Time.Format("15:04"), meeting.End.Format("15:04"), meeting.Title, meeting.Room)
+			fmt.Fprintf(&sb, "%s - %s  %s%s  %s", meeting.Time.Format("15:04"), meeting.End.Format("15:04"), meeting.Title, strings.Repeat(" ", titleMaxWidth-len(meeting.Title)), meeting.Room)
 			sb.WriteString("\n")
 		}
 		numMeetings++
