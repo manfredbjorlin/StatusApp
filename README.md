@@ -2,11 +2,14 @@
 
 StatusApp is a terminal-based application written in Go, utilizing the [Bubble Tea](https://github.com/charmbracelet/bubbletea) TUI (Terminal User Interface) framework. It provides a concise, real-time overview of various system statuses directly in your terminal.
 
+The project has recently undergone a significant architectural refactoring to improve modularity, testability, and align with Go best practices.
+
 ## Features
 
 -   **Digital Clock:** Displays the current time using stylized ASCII art (Figlet).
 -   **Tailscale Status:** Shows the connection status and details of your Tailscale devices, including key expiry.
--   **Weather Information:** Presents current weather conditions for a configured location.
+-   **TrueNAS Status:** Monitors the status of applications running on a TrueNAS instance.
+-   **Weather Information:** Presents current weather conditions and water temperature for a configured location.
 -   **Meeting Schedule:** Displays upcoming meetings from a local schedule file.
 
 ## Getting Started
@@ -17,6 +20,9 @@ To run StatusApp, you need:
 -   Go (version 1.25.5 or later)
 -   Access to Tailscale API (for device status)
 -   Access to [WeatherAPI](https://www.weatherapi.com) (for weather information)
+-   Access to a TrueNAS instance with the API enabled.
+
+The project follows a modern, domain-driven structure and now includes a comprehensive test suite to ensure reliability.
 
 ### Configuration
 
@@ -28,10 +34,24 @@ TAILSCALE_API_KEY=your_tailscale_api_key
 TAILSCALE_API_KEY_ID=your_tailscale_api_key_id
 WEATHERAPI_API_KEY=your_weatherapi_key
 WEATHERAPI_LOCATION=your_location
-WEATHER_ICON_PATH=file_path_weather_json
+WATERTEMPERATURE_LOCATION_ID=your_watertemp_location_id
+TRUENAS_BASE_URL=https://your-truenas-instance
+TRUENAS_API_KEY=your_truenas_api_key
 SCHEDULE_FILE_PATH=file_path
+
+# Weather Provider Configuration
+# WEATHER_PROVIDER can be "weatherapi" (default) or "yr".
+# The following variables are conditional based on WEATHER_PROVIDER:
+WEATHER_PROVIDER=weatherapi # or yr
+
+# If WEATHER_PROVIDER is "weatherapi":
+WEATHER_ICON_PATH=path/to/weather.json # e.g., assets/weather.json
+
+# If WEATHER_PROVIDER is "yr":
+WEATHER_LAT=your_latitude
+WEATHER_LON=your_longitude
+WEATHER_ICON_PATH_YR=path/to/weather_yr.csv # e.g., assets/weather_yr.csv
 ```
-The `weather.json` file is currently in `assets/` but is necessary in runtime
 
 ## File Structure: Schedule
 
@@ -78,6 +98,8 @@ For a more in-depth understanding of the project:
 -   [Codebase Overview](docs/codebase.md)
 -   [Project Structure](docs/structure.md)
 -   [Migration History](docs/migration.md)
+-   [Project Update Log](docs/ProjectUpdate.md)
+-   [Restructuring Recommendations](docs/Restructure.md)
 
 ## License
 
