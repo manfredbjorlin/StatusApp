@@ -26,7 +26,7 @@ func View(
 
 	if !alternatingText {
 		sb.WriteString(
-			configs.BoldText.Render(fmt.Sprintf("%-3s%s ", weather.Icon, weather.Text)),
+			configs.BoldText.Render(fmt.Sprintf("%-2s%s ", weather.Icon, weather.Text)),
 		)
 		sb.WriteString(noStyle.Render(weather.Location))
 		sb.WriteString(configs.BoldText.Render(fmt.Sprintf(" %0.1f°C ", weather.Temperature)))

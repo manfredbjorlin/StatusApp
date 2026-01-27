@@ -31,7 +31,7 @@ func parseYrIcon(raw string) (string, error) {
 
 	// Combine the surrogates to get the final code point.
 	// Formula from Unicode standard.
-	r := 0x10000 + (high-0xD800)*0x400 + (low-0xDC00)
+	r := 0x10000 + (high-0xD800)*0x400 + (low - 0xDC00)
 
 	return string(rune(r)), nil
 }
@@ -39,19 +39,19 @@ func parseYrIcon(raw string) (string, error) {
 func getIconYr(csvLocation string, symbolId string) (string, string) {
 	file, err := os.Open(csvLocation)
 	if err != nil {
-		return "?", "Unknown"
+		return "?", "CSV not found"
 	}
 	defer file.Close()
 
 	reader := csv.NewReader(file)
 	// skip header
 	if _, err := reader.Read(); err != nil {
-		return "?", "Unknown"
+		return "?", "Open file err"
 	}
 
 	records, err := reader.ReadAll()
 	if err != nil {
-		return "?", "Unknown"
+		return "?", "Read file err"
 	}
 
 	for _, record := range records {
@@ -64,5 +64,6 @@ func getIconYr(csvLocation string, symbolId string) (string, string) {
 		}
 	}
 
-	return "?", "Unknown"
+	return "?", symbolId
 }
+

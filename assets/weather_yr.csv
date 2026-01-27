@@ -1,7 +1,11 @@
 SymbolID,English,Bokmål,Nynorsk,OldID,Variants,Icon
 clearsky,Clear sky,Klarvær,Klårvêr,1,1,\udb81\udd99
+clearsky_day,Sunny,Klarvær,Klårvêr,1,1,\udb81\udd99
+clearsky_night,Clear sky,Klarvær,Klårvêr,1,1,\udb81\udd94
 fair,Fair,Lettskyet,Lettskya,2,1,\udb81\udd95
 partlycloudy,Partly cloudy,Delvis skyet,Delvis skya,3,1,\udb81\udd95
+partlycloudy_day,Partly cloudy,Delvis skyet,Delvis skya,3,1,\udb81\udd95
+partlycloudy_night,Partly cloudy,Delvis skyet,Delvis skya,3,1,\udb83\udf31
 cloudy,Cloudy,Skyet,Skya,4,0,\udb81\udd90
 lightrainshowers,Light rain showers,Lette regnbyger,Lette regnbyer,40,1,\udb83\udf33
 rainshowers,Rain showers,Regnbyger,Regnbyer,5,1,\udb81\udd97

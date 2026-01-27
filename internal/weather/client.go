@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -103,18 +104,24 @@ func (c *Client) getCurrentWeatherYr(ctx context.Context) (*WeatherForecastInter
 		return nil, err
 	}
 
+	symbolCode := m.Properties.Timeseries[0].Data.Next1Hours.Summary.SymbolCode
 	icon, text := getIconYr(
 		os.Getenv("WEATHER_ICON_PATH_YR"),
-		m.Properties.Timeseries[0].Data.Next1Hours.Summary.SymbolCode,
+		symbolCode,
 	)
 
-	go func(icon string, text string) {
-		_ = os.WriteFile(
-			"/home/manfred/Development/StatusApp/deployments/icons.txt",
-			fmt.Appendf(nil, "Icon: %s\nText: %s", icon, text),
-			0o666,
+	if icon == "?" &&
+		(strings.HasSuffix(symbolCode, "_night") || strings.HasSuffix(symbolCode, "_day")) {
+		tmpIcon, tmpText := getIconYr(
+			os.Getenv("WEATHER_ICON_PATH_YR"),
+			symbolCode[:strings.LastIndex(symbolCode, "_")],
 		)
-	}(icon, text)
+
+		if tmpIcon != "?" {
+			icon = tmpIcon
+			text = tmpText
+		}
+	}
 
 	result := WeatherForecastInternal{
 		Icon:        icon,
