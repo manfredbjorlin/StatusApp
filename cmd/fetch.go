@@ -7,6 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
+	"StatusApp/internal/hosthatch"
 	"StatusApp/internal/schedule"
 	"StatusApp/internal/tailscale"
 	"StatusApp/internal/truenas"
@@ -21,6 +22,7 @@ func mapFetchedData(m BubbleTeaModel, msg fetchedDataMsg) (tea.Model, tea.Cmd) {
 	m.Model.TruenasApps = msg.truenasApps
 	m.Model.Weather = msg.weather
 	m.Model.Schedule = msg.schedule
+	m.Model.HostHatchServers = msg.hosthatchServers
 
 	if len(msg.waterTemperature.Embedded.NearestLocations) > 0 {
 		loc := msg.waterTemperature.Embedded.NearestLocations[0]
@@ -44,10 +46,11 @@ func fetchData(m BubbleTeaModel) tea.Cmd {
 		var weatherData *weather.WeatherForecastInternal
 		var waterTempData weather.WaterTemperature
 		var scheduleData []schedule.Meeting
+		var hostHatchServers []hosthatch.Server
 		var err error
 
 		// Run fetches in parallel
-		errs := make(chan error, 5)
+		errs := make(chan error, 6)
 
 		go func() {
 			tsDevices, err = m.Model.TailscaleClient.GetMachines(ctx)
@@ -69,9 +72,13 @@ func fetchData(m BubbleTeaModel) tea.Cmd {
 			waterTempData, err = m.Model.WeatherClient.GetWaterTemperature(ctx)
 			errs <- err
 		}()
+		go func() {
+			hostHatchServers, err = m.Model.HostHatchClient.ListServers(ctx)
+			errs <- err
+		}()
 
 		// Process results
-		for range 5 {
+		for range 6 {
 			if err := <-errs; err != nil {
 				return errorMsg{err} // Return on the first error
 			}
@@ -91,6 +98,7 @@ func fetchData(m BubbleTeaModel) tea.Cmd {
 			weather:            weatherData,
 			waterTemperature:   waterTempData,
 			schedule:           scheduleData,
+			hosthatchServers:   hostHatchServers,
 		}
 	}
 }

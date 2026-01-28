@@ -61,6 +61,7 @@ type Screen int
 const (
 	ScreenMain Screen = iota
 	ScreenApps
+	ScreenServers
 )
 
 func SetBg(style lipgloss.Style, line int) lipgloss.Style {

@@ -16,7 +16,7 @@ import (
 func View(apps []App) string {
 	greenBold := lipgloss.NewStyle().Bold(true).Foreground(configs.BrightGreen)
 	pinkBold := lipgloss.NewStyle().Bold(true).Foreground(configs.HotPink)
-	ok := "\uf00c"
+	ok := "\uf04b"
 	var sb strings.Builder
 
 	sb.WriteString(configs.BoldText.Render("\uf0c7 Apps with updates"))
@@ -44,6 +44,8 @@ func View(apps []App) string {
 			} else {
 				line += pinkBold.Render("Updating")
 			}
+			// var lineStyle lipgloss.Style
+			// lineStyle = configs.SetBg(lineStyle)
 			updateApps = append(updateApps, line)
 		}
 	}
@@ -57,8 +59,14 @@ func View(apps []App) string {
 	if len(updateApps) > 9 {
 		toDisplay = updateApps[:9]
 	}
-	list := list.New(toDisplay).Enumerator(enumerator)
-	sb.WriteString(list.String())
+	mylist := list.New(toDisplay).
+		Enumerator(enumerator).
+		ItemStyleFunc(func(items list.Items, i int) lipgloss.Style {
+			var lineStyle lipgloss.Style
+			lineStyle = configs.SetBg(lineStyle, i)
+			return lineStyle
+		})
+	sb.WriteString(mylist.String())
 
 	return configs.TailscaleStyle.Render(sb.String())
 }

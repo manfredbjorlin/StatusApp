@@ -3,6 +3,7 @@ package core
 import (
 	"time"
 
+	"StatusApp/internal/hosthatch"
 	"StatusApp/internal/schedule"
 	"StatusApp/internal/tailscale"
 	"StatusApp/internal/truenas"
@@ -14,6 +15,7 @@ type MainModel struct {
 	TailscaleClient tailscale.MachineGetter
 	WeatherClient   weather.DataProvider
 	TruenasClient   truenas.AppGetter
+	HostHatchClient hosthatch.HostHatchClient
 
 	// UI State
 	WindowWidth, WindowHeight int
@@ -30,4 +32,5 @@ type MainModel struct {
 	Weather            *weather.WeatherForecastInternal
 	WaterTemperature   weather.WaterTemperatureInternal
 	TruenasUpdateList  map[int]string
+	HostHatchServers   []hosthatch.Server
 }

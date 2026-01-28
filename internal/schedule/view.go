@@ -21,7 +21,7 @@ func View(meetings []Meeting) string {
 	totalWidth := configs.ScheduleStyle.GetWidth() - (2 * configs.ScheduleStyle.GetPaddingLeft())
 	timeWidth := len("10:00 - 10:00  ")
 
-	for i, meeting := range meetings {
+	for _, meeting := range meetings {
 		if err != nil {
 			continue
 		}
@@ -47,7 +47,7 @@ func View(meetings []Meeting) string {
 						meeting.Time.Format("15:04"),
 						meeting.End.Format("15:04"),
 						meeting.Title,
-						strings.Repeat(" ", titleMaxWidth-len(meeting.Title)),
+						strings.Repeat(" ", titleMaxWidth-len([]rune(meeting.Title))),
 						meeting.Room,
 					),
 				),
@@ -61,11 +61,19 @@ func View(meetings []Meeting) string {
 			}
 			firstLine = false
 		} else {
-			if i > configs.MaxScheduleEvents {
+			if numMeetings >= configs.MaxScheduleEvents {
 				numMeetings++
 				break
 			}
-			fmt.Fprintf(&sb, "%s - %s  %s%s  %s", meeting.Time.Format("15:04"), meeting.End.Format("15:04"), meeting.Title, strings.Repeat(" ", titleMaxWidth-len(meeting.Title)), meeting.Room)
+			fmt.Fprintf(
+				&sb,
+				"%s - %s  %s%s  %s",
+				meeting.Time.Format("15:04"),
+				meeting.End.Format("15:04"),
+				meeting.Title,
+				strings.Repeat(" ", titleMaxWidth-len([]rune(meeting.Title))),
+				meeting.Room,
+			)
 			sb.WriteString("\n")
 		}
 		numMeetings++
@@ -76,7 +84,14 @@ func View(meetings []Meeting) string {
 		soonMeeting = false
 		inMeeting = false
 	} else if numMeetings < configs.MaxScheduleEvents {
-		sb.WriteString(strings.Repeat(" ", 15) + configs.BoldText.Render("< EOF >"))
+		sb.WriteString(
+			strings.Repeat(
+				" ",
+				15,
+			) + configs.BoldText.Render(
+				"< EOF >",
+			),
+		)
 	}
 
 	// Determine style based on state

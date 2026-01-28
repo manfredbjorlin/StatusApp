@@ -15,9 +15,6 @@ func RenderClock(weatherPart string) string {
 
 	// Render ASCII Clock
 	ascii := figlet4go.NewAsciiRender()
-	// opts := figlet4go.NewRenderOptions()
-	// opts.FontName = "big"
-	// _ = ascii.LoadFont(fontPath)
 	clockStr, _ := ascii.Render(currentTime.Format("15:04"))
 
 	lipglossPink := lipgloss.NewStyle().

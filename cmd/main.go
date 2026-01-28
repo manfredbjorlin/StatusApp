@@ -10,9 +10,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/joho/godotenv"
+	"github.com/mbndr/figlet4go"
 
 	"StatusApp/configs"
 	"StatusApp/internal/clock"
+	"StatusApp/internal/hosthatch"
 	"StatusApp/internal/schedule"
 	"StatusApp/internal/tailscale"
 	"StatusApp/internal/truenas"
@@ -42,6 +44,7 @@ func newModel() BubbleTeaModel {
 	tailscaleClient := tailscale.NewClient(tailscaleAPIKey, tailscaleTailnet, tailscaleKeyID)
 	weatherClient := weather.NewClient(weatherAPIKey, weatherLocation, waterLocationID)
 	truenasClient := truenas.NewClient(truenasURL, truenasAPIKey)
+	hosthastClient := hosthatch.NewClient(os.Getenv("HOSTHATCH_API_KEY"))
 
 	return BubbleTeaModel{
 		CurrentScreen: configs.ScreenMain,
@@ -49,6 +52,7 @@ func newModel() BubbleTeaModel {
 			TailscaleClient: tailscaleClient,
 			WeatherClient:   weatherClient,
 			TruenasClient:   truenasClient,
+			HostHatchClient: hosthastClient,
 			TickCounter:     60, // Start ready to fetch
 			AlternatingText: false,
 		},
@@ -67,6 +71,7 @@ type (
 		weather            *weather.WeatherForecastInternal
 		waterTemperature   weather.WaterTemperature
 		schedule           []schedule.Meeting
+		hosthatchServers   []hosthatch.Server
 	}
 )
 
@@ -109,11 +114,21 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.CurrentScreen = configs.ScreenApps
 		case "m":
 			m.CurrentScreen = configs.ScreenMain
+		case "s":
+			m.CurrentScreen = configs.ScreenServers
 		}
 		number, err := strconv.Atoi(msg.String())
 		if m.CurrentScreen == configs.ScreenApps && err == nil {
 			_ = m.Model.TruenasClient.UpdateApp(m.Model.TruenasApps, number)
-			m.Model.TickCounter = configs.SecondsBetweenRefresh
+			updatedModel := make([]truenas.App, 0)
+			for _, _app := range m.Model.TruenasApps {
+				if _app.UpdateId == number {
+					_app.State = "STOPPED"
+				}
+				updatedModel = append(updatedModel, _app)
+			}
+			m.Model.TruenasApps = updatedModel
+			m.Model.TickCounter = configs.SecondsBetweenRefresh / 2
 		}
 	}
 	return m, nil
@@ -133,47 +148,59 @@ func (m BubbleTeaModel) View() string {
 			fmt.Sprintf("Error: %s", m.Model.Error.Error()),
 		)
 	}
-
-	weatherView := weather.View(
-		m.Model.Weather,
-		m.Model.WaterTemperature,
-		m.Model.AlternatingText,
-	)
-
-	clockView := clock.RenderClock(weatherView)
-
-	var topLeft string
-	if m.CurrentScreen == configs.ScreenMain {
-		topLeft = tailscale.View(
-			m.Model.TailscaleDevices.Devices,
-			m.Model.TailscaleKeyExpiry,
-			m.Model.TruenasApps,
-			m.Model.AlternatingText,
+	var mainContent string
+	if m.CurrentScreen == configs.ScreenServers {
+		ascii := figlet4go.NewAsciiRender()
+		clockStr, _ := ascii.Render("Servers")
+		heading := lipgloss.NewStyle().Foreground(configs.HotPink).Render(clockStr)
+		mainContent = lipgloss.JoinVertical(
+			lipgloss.Top,
+			heading,
+			hosthatch.View(m.Model.HostHatchServers, m.Model.AlternatingText),
 		)
 	} else {
-		topLeft = truenas.View(m.Model.TruenasApps)
+		weatherView := weather.View(
+			m.Model.Weather,
+			m.Model.WaterTemperature,
+			m.Model.AlternatingText,
+		)
+
+		clockView := clock.RenderClock(weatherView)
+
+		var topLeft string
+		if m.CurrentScreen == configs.ScreenMain {
+			topLeft = tailscale.View(
+				m.Model.TailscaleDevices.Devices,
+				m.Model.TailscaleKeyExpiry,
+				m.Model.TruenasApps,
+				m.Model.AlternatingText,
+			)
+		} else {
+			topLeft = truenas.View(m.Model.TruenasApps)
+		}
+
+		top := lipgloss.JoinHorizontal(lipgloss.Left, topLeft, clockView)
+
+		scheduleView := schedule.View(m.Model.Schedule)
+
+		mainContent = lipgloss.JoinVertical(lipgloss.Left, top, scheduleView)
 	}
-
-	top := lipgloss.JoinHorizontal(lipgloss.Left, topLeft, clockView)
-
-	scheduleView := schedule.View(m.Model.Schedule)
-
-	mainContent := lipgloss.JoinVertical(lipgloss.Left, top, scheduleView)
-
 	menuItems := map[string]string{
 		"q": "quit",
 		"r": "refresh",
 		"a": "apps",
+		"s": "servers",
 		"m": "main screen",
 		"e": "exclude",
 	}
 	var menuItemOrder []string
 	switch m.CurrentScreen {
 	case configs.ScreenMain:
-		menuItemOrder = []string{"q", "r", "a"}
+		menuItemOrder = []string{"q", "r", "a", "s"}
 	case configs.ScreenApps:
+		fallthrough
+	case configs.ScreenServers:
 		menuItemOrder = []string{"q", "r", "m"}
-
 	}
 
 	menu := renderMenu(menuItems, menuItemOrder, m.Model.LastUpdated)
