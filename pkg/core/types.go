@@ -36,4 +36,5 @@ type MainModel struct {
 	TruenasUpdateList  map[int]string
 	HostHatchServers   []hosthatch.Server
 	UpCloudServers     []upcloud.Server
+	UpcloudAccountInfo upcloud.AccountInfo
 }

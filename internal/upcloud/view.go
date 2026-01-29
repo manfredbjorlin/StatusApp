@@ -31,7 +31,7 @@ func Status(servers []Server) string {
 	return strings.Join(result, " | ")
 }
 
-func View(servers []Server, alternatingText bool) string {
+func View(servers []Server, alternatingText bool, accountInfo AccountInfo) string {
 	result := configs.BoldText.Foreground(configs.BrightGreen).
 		Width(configs.ScheduleStyle.GetWidth()).
 		AlignHorizontal(lipgloss.Center).
@@ -82,6 +82,25 @@ func View(servers []Server, alternatingText bool) string {
 		}).
 		Width(configs.ScheduleStyle.GetWidth()).
 		String()
+
+	result += "\n"
+
+	accountInfo.Currency = strings.ReplaceAll(accountInfo.Currency, "EUR", "€")
+	result += lipgloss.NewStyle().
+		Width(configs.ScheduleStyle.GetWidth()).
+		AlignHorizontal(lipgloss.Center).
+		Render(
+			fmt.Sprintf(
+				"%s %s %0.2f - %s %s %0.2f",
+				configs.BoldText.Render(
+					"Remaining Credits:",
+				),
+				accountInfo.Currency,
+				accountInfo.RemainingCredits,
+				configs.BoldText.Render("Montly usage:"),
+				accountInfo.Currency,
+				accountInfo.BillingSummary,
+			))
 
 	result += "\n"
 	return result

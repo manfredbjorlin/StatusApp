@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"StatusApp/internal/schedule"
+	"StatusApp/internal/upcloud"
 	"StatusApp/internal/weather"
 )
 
@@ -21,6 +22,7 @@ func mapFetchedData(m BubbleTeaModel, msg fetchedDataMsg) (tea.Model, tea.Cmd) {
 	m.Model.Schedule = msg.schedule
 	m.Model.HostHatchServers = msg.hosthatchServers
 	m.Model.UpCloudServers = msg.upcloudServers
+	m.Model.UpcloudAccountInfo = msg.upcloudAccountInfo
 
 	if len(msg.waterTemperature.Embedded.NearestLocations) > 0 {
 		loc := msg.waterTemperature.Embedded.NearestLocations[0]
@@ -67,6 +69,25 @@ func fetchData(m BubbleTeaModel) tea.Cmd {
 			}, func() {
 				result.upcloudServers, err = m.Model.UpCludClient.ListServers(ctx)
 				errs <- err
+			}, func() {
+				_, remaining, err := m.Model.UpCludClient.RemainingCredits(
+					ctx,
+				)
+				if err != nil {
+					errs <- err
+					return
+				}
+				currency, usage, err := m.Model.UpCludClient.BillingSummary(
+					ctx,
+					time.Now().Year(),
+					int(time.Now().Month()),
+				)
+				errs <- err
+				result.upcloudAccountInfo = upcloud.AccountInfo{
+					RemainingCredits: remaining,
+					Currency:         currency,
+					BillingSummary:   usage,
+				}
 			},
 		}
 

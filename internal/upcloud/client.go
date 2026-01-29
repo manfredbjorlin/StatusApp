@@ -93,7 +93,26 @@ func (client *Client) StartServer(ctx context.Context, uuid uuid.UUID) error   {
 func (client *Client) StopServer(ctx context.Context, uuid uuid.UUID) error    { return nil }
 func (client *Client) RestartServer(ctx context.Context, uuid uuid.UUID) error { return nil }
 func (client *Client) RemainingCredits(ctx context.Context) (string, float64, error) {
-	return "", 0.0, nil
+	req, err := client.newHttpRequest(
+		ctx,
+		"GET",
+		fmt.Sprintf("%s/1.3/account", client.baseURL),
+		nil,
+	)
+	if err != nil {
+		return "", 0.0, nil
+	}
+	res, err := client.httpClient.Do(req)
+	if err != nil {
+		return "", 0.0, err
+	}
+
+	m := Account{}
+	if err = json.NewDecoder(res.Body).Decode(&m); err != nil {
+		return "", 0.0, err
+	}
+
+	return "EUR", m.Data.Credits / 100, nil
 }
 
 func (client *Client) BillingSummary(
@@ -101,5 +120,24 @@ func (client *Client) BillingSummary(
 	year int,
 	month int,
 ) (string, float64, error) {
-	return "", 0.0, nil
+	req, err := client.newHttpRequest(
+		ctx,
+		"GET",
+		fmt.Sprintf("%s/1.3/account/billing/summary/%v-%02d", client.baseURL, year, month),
+		nil,
+	)
+	if err != nil {
+		return "", 0.0, nil
+	}
+	res, err := client.httpClient.Do(req)
+	if err != nil {
+		return "", 0.0, err
+	}
+
+	m := Billing{}
+	if err = json.NewDecoder(res.Body).Decode(&m); err != nil {
+		return "", 0.0, err
+	}
+
+	return m.Currency, m.TotalAmount, nil
 }

@@ -37,3 +37,9 @@ type Billing struct {
 	Currency    string  `json:"currency"`
 	TotalAmount float64 `json:"total_amount"`
 }
+
+type AccountInfo struct {
+	Currency         string
+	RemainingCredits float64
+	BillingSummary   float64
+}

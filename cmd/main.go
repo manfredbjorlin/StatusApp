@@ -76,6 +76,7 @@ type (
 		schedule           []schedule.Meeting
 		hosthatchServers   []hosthatch.Server
 		upcloudServers     []upcloud.Server
+		upcloudAccountInfo upcloud.AccountInfo
 	}
 )
 
@@ -161,7 +162,11 @@ func (m BubbleTeaModel) View() string {
 			lipgloss.Top,
 			heading,
 			hosthatch.View(m.Model.HostHatchServers, m.Model.AlternatingText),
-			upcloud.View(m.Model.UpCloudServers, m.Model.AlternatingText),
+			upcloud.View(
+				m.Model.UpCloudServers,
+				m.Model.AlternatingText,
+				m.Model.UpcloudAccountInfo,
+			),
 		)
 	} else {
 		weatherView := weather.View(
@@ -194,7 +199,7 @@ func (m BubbleTeaModel) View() string {
 		statusLine := statusStyle.Render(
 			hosthatch.Status(
 				m.Model.HostHatchServers,
-			) + " | " + upcloud.Status(
+			) + " - " + upcloud.Status(
 				m.Model.UpCloudServers,
 			),
 		)
