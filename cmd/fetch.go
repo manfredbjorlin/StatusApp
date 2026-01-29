@@ -7,10 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"StatusApp/internal/hosthatch"
 	"StatusApp/internal/schedule"
-	"StatusApp/internal/tailscale"
-	"StatusApp/internal/truenas"
 	"StatusApp/internal/weather"
 )
 
@@ -23,6 +20,7 @@ func mapFetchedData(m BubbleTeaModel, msg fetchedDataMsg) (tea.Model, tea.Cmd) {
 	m.Model.Weather = msg.weather
 	m.Model.Schedule = msg.schedule
 	m.Model.HostHatchServers = msg.hosthatchServers
+	m.Model.UpCloudServers = msg.upcloudServers
 
 	if len(msg.waterTemperature.Embedded.NearestLocations) > 0 {
 		loc := msg.waterTemperature.Embedded.NearestLocations[0]
@@ -40,45 +38,44 @@ func fetchData(m BubbleTeaModel) tea.Cmd {
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
 
-		var tsDevices tailscale.Devices
-		var tsKey time.Time
-		var tnApps []truenas.App
-		var weatherData *weather.WeatherForecastInternal
-		var waterTempData weather.WaterTemperature
-		var scheduleData []schedule.Meeting
-		var hostHatchServers []hosthatch.Server
+		var result fetchedDataMsg
 		var err error
 
-		// Run fetches in parallel
-		errs := make(chan error, 6)
+		type updateFuncs func()
+		var errs chan error
 
-		go func() {
-			tsDevices, err = m.Model.TailscaleClient.GetMachines(ctx)
-			errs <- err
-		}()
-		go func() {
-			tsKey, err = m.Model.TailscaleClient.GetKeyExpiry(ctx)
-			errs <- err
-		}()
-		go func() {
-			tnApps, err = m.Model.TruenasClient.GetApps(ctx)
-			errs <- err
-		}()
-		go func() {
-			weatherData, err = m.Model.WeatherClient.GetCurrentWeather(ctx)
-			errs <- err
-		}()
-		go func() {
-			waterTempData, err = m.Model.WeatherClient.GetWaterTemperature(ctx)
-			errs <- err
-		}()
-		go func() {
-			hostHatchServers, err = m.Model.HostHatchClient.ListServers(ctx)
-			errs <- err
-		}()
+		updateFunctions := []updateFuncs{
+			func() {
+				result.tailscaleDevices, err = m.Model.TailscaleClient.GetMachines(ctx)
+				errs <- err
+			},
+			func() {
+				result.tailscaleKeyExpiry, err = m.Model.TailscaleClient.GetKeyExpiry(ctx)
+				errs <- err
+			}, func() {
+				result.truenasApps, err = m.Model.TruenasClient.GetApps(ctx)
+				errs <- err
+			}, func() {
+				result.weather, err = m.Model.WeatherClient.GetCurrentWeather(ctx)
+				errs <- err
+			}, func() {
+				result.waterTemperature, err = m.Model.WeatherClient.GetWaterTemperature(ctx)
+				errs <- err
+			}, func() {
+				result.hosthatchServers, err = m.Model.HostHatchClient.ListServers(ctx)
+				errs <- err
+			}, func() {
+				result.upcloudServers, err = m.Model.UpCludClient.ListServers(ctx)
+				errs <- err
+			},
+		}
 
-		// Process results
-		for range 6 {
+		errs = make(chan error, len(updateFunctions))
+		for _, updFunc := range updateFunctions {
+			go updFunc()
+		}
+
+		for range len(updateFunctions) {
 			if err := <-errs; err != nil {
 				return errorMsg{err} // Return on the first error
 			}
@@ -86,19 +83,11 @@ func fetchData(m BubbleTeaModel) tea.Cmd {
 
 		// Schedule is loaded synchronously as it's a file read
 		scheduleFile := os.Getenv("SCHEDULE_FILE_PATH")
-		scheduleData, err = schedule.LoadSchedule(scheduleFile)
+		result.schedule, err = schedule.LoadSchedule(scheduleFile)
 		if err != nil {
 			return errorMsg{err}
 		}
 
-		return fetchedDataMsg{
-			tailscaleDevices:   tsDevices,
-			tailscaleKeyExpiry: tsKey,
-			truenasApps:        tnApps,
-			weather:            weatherData,
-			waterTemperature:   waterTempData,
-			schedule:           scheduleData,
-			hosthatchServers:   hostHatchServers,
-		}
+		return result
 	}
 }

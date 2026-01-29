@@ -54,6 +54,9 @@ var (
 	BoldText = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(HeaderText)
+
+	RunningIcon = lipgloss.NewStyle().Foreground(BrightGreen).Render("\uf04b")
+	StoppedIcon = lipgloss.NewStyle().Foreground(HotPink).Render("\uf04d")
 )
 
 type Screen int

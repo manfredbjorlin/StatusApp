@@ -8,6 +8,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/mbndr/figlet4go v0.0.0-20190224160619-d6cef5b186ea
 	golang.org/x/text v0.33.0
+	github.com/google/uuid v1.6.0
 )
 
 require (

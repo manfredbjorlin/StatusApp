@@ -1,25 +1,22 @@
-package hosthatch
+package upcloud
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 
 	"StatusApp/configs"
 )
 
 const (
-	runningText = "Active"
+	runningText = "started"
 )
 
 func Status(servers []Server) string {
 	result := make([]string, 0)
-
-	caser := cases.Title(language.BrazilianPortuguese)
 
 	for _, server := range servers {
 		var icon string
@@ -28,7 +25,7 @@ func Status(servers []Server) string {
 		} else {
 			icon = configs.StoppedIcon
 		}
-		result = append(result, fmt.Sprintf("%s %s", icon, caser.String(server.Hostname)))
+		result = append(result, fmt.Sprintf("%s %s", icon, server.Title))
 	}
 
 	return strings.Join(result, " | ")
@@ -38,26 +35,11 @@ func View(servers []Server, alternatingText bool) string {
 	result := configs.BoldText.Foreground(configs.BrightGreen).
 		Width(configs.ScheduleStyle.GetWidth()).
 		AlignHorizontal(lipgloss.Center).
-		Render("HostHatch")
+		Render("UpCloud")
 	result += "\n"
 
 	tableRows := make([][]string, 0)
 	for _, server := range servers {
-
-		caser := cases.Title(language.BrazilianPortuguese)
-		name := caser.String(server.Hostname)
-		billing := fmt.Sprintf(
-			"%s %v.00/%s",
-			strings.ReplaceAll(server.Billing.Currency, "USD", "$"),
-			server.Billing.RecurringCost,
-			server.Billing.BillingCycle,
-		)
-		if alternatingText {
-			billing = server.Billing.NextDue + strings.Repeat(
-				" ",
-				len(billing)-len(server.Billing.NextDue),
-			)
-		}
 
 		status := server.State
 		if status == runningText {
@@ -65,22 +47,26 @@ func View(servers []Server, alternatingText bool) string {
 		} else {
 			status = configs.StoppedIcon + status
 		}
+
+		memory, _ := strconv.Atoi(server.MemoryAmount)
+		memory /= 1024
+
 		tableRows = append(tableRows, []string{
-			name,
+			server.Title,
 			status,
-			server.Product.Location,
-			server.Product.Name,
-			server.Product.Image,
-			billing,
+			server.CoreNumber,
+			fmt.Sprintf("%v Gb", memory),
+			server.Plan,
+			server.Zone,
 		})
 	}
 	headers := []string{
 		"Hostname",
 		"State",
-		"Location",
-		"Product",
-		"Image",
-		"Billing",
+		"Cores",
+		"Memory",
+		"Plan",
+		"Zone",
 	}
 
 	result += table.New().

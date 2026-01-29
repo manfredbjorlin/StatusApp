@@ -18,6 +18,7 @@ import (
 	"StatusApp/internal/schedule"
 	"StatusApp/internal/tailscale"
 	"StatusApp/internal/truenas"
+	"StatusApp/internal/upcloud"
 	"StatusApp/internal/weather"
 	"StatusApp/pkg/core"
 )
@@ -30,21 +31,22 @@ type BubbleTeaModel struct {
 }
 
 func newModel() BubbleTeaModel {
-	// Load environment variables
 	tailscaleAPIKey := os.Getenv("TAILSCALE_API_KEY")
 	tailscaleTailnet := os.Getenv("TAILSCALE_TAILNET_ID")
 	tailscaleKeyID := os.Getenv("TAILSCALE_API_KEY_ID")
+	tailscaleClient := tailscale.NewClient(tailscaleAPIKey, tailscaleTailnet, tailscaleKeyID)
+
 	weatherAPIKey := os.Getenv("WEATHERAPI_API_KEY")
 	weatherLocation := os.Getenv("WEATHERAPI_LOCATION")
 	waterLocationID := os.Getenv("WATERTEMPERATURE_LOCATION_ID")
+	weatherClient := weather.NewClient(weatherAPIKey, weatherLocation, waterLocationID)
+
 	truenasURL := os.Getenv("TRUENAS_BASE_URL")
 	truenasAPIKey := os.Getenv("TRUENAS_API_KEY")
-
-	// Initialize clients
-	tailscaleClient := tailscale.NewClient(tailscaleAPIKey, tailscaleTailnet, tailscaleKeyID)
-	weatherClient := weather.NewClient(weatherAPIKey, weatherLocation, waterLocationID)
 	truenasClient := truenas.NewClient(truenasURL, truenasAPIKey)
+
 	hosthastClient := hosthatch.NewClient(os.Getenv("HOSTHATCH_API_KEY"))
+	upcloudClient := upcloud.NewClient(os.Getenv("UPCLOUD_API_KEY"))
 
 	return BubbleTeaModel{
 		CurrentScreen: configs.ScreenMain,
@@ -53,6 +55,7 @@ func newModel() BubbleTeaModel {
 			WeatherClient:   weatherClient,
 			TruenasClient:   truenasClient,
 			HostHatchClient: hosthastClient,
+			UpCludClient:    upcloudClient,
 			TickCounter:     60, // Start ready to fetch
 			AlternatingText: false,
 		},
@@ -72,6 +75,7 @@ type (
 		waterTemperature   weather.WaterTemperature
 		schedule           []schedule.Meeting
 		hosthatchServers   []hosthatch.Server
+		upcloudServers     []upcloud.Server
 	}
 )
 
@@ -151,12 +155,13 @@ func (m BubbleTeaModel) View() string {
 	var mainContent string
 	if m.CurrentScreen == configs.ScreenServers {
 		ascii := figlet4go.NewAsciiRender()
-		clockStr, _ := ascii.Render("Servers")
-		heading := lipgloss.NewStyle().Foreground(configs.HotPink).Render(clockStr)
+		header, _ := ascii.Render("Servers")
+		heading := lipgloss.NewStyle().Foreground(configs.HotPink).Render(header)
 		mainContent = lipgloss.JoinVertical(
 			lipgloss.Top,
 			heading,
 			hosthatch.View(m.Model.HostHatchServers, m.Model.AlternatingText),
+			upcloud.View(m.Model.UpCloudServers, m.Model.AlternatingText),
 		)
 	} else {
 		weatherView := weather.View(
@@ -183,7 +188,18 @@ func (m BubbleTeaModel) View() string {
 
 		scheduleView := schedule.View(m.Model.Schedule)
 
-		mainContent = lipgloss.JoinVertical(lipgloss.Left, top, scheduleView)
+		statusStyle := lipgloss.NewStyle().
+			Width(configs.ScheduleStyle.GetWidth()).
+			AlignHorizontal(lipgloss.Center)
+		statusLine := statusStyle.Render(
+			hosthatch.Status(
+				m.Model.HostHatchServers,
+			) + " | " + upcloud.Status(
+				m.Model.UpCloudServers,
+			),
+		)
+
+		mainContent = lipgloss.JoinVertical(lipgloss.Left, statusLine, top, scheduleView)
 	}
 	menuItems := map[string]string{
 		"q": "quit",

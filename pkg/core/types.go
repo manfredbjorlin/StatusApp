@@ -7,6 +7,7 @@ import (
 	"StatusApp/internal/schedule"
 	"StatusApp/internal/tailscale"
 	"StatusApp/internal/truenas"
+	"StatusApp/internal/upcloud"
 	"StatusApp/internal/weather"
 )
 
@@ -16,6 +17,7 @@ type MainModel struct {
 	WeatherClient   weather.DataProvider
 	TruenasClient   truenas.AppGetter
 	HostHatchClient hosthatch.HostHatchClient
+	UpCludClient    upcloud.UpCloudClient
 
 	// UI State
 	WindowWidth, WindowHeight int
@@ -33,4 +35,5 @@ type MainModel struct {
 	WaterTemperature   weather.WaterTemperatureInternal
 	TruenasUpdateList  map[int]string
 	HostHatchServers   []hosthatch.Server
+	UpCloudServers     []upcloud.Server
 }
