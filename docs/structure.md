@@ -10,32 +10,27 @@ This document outlines the directory and file structure of the StatusApp project
 - **`README.md`**: The main project documentation, providing an overview and instructions.
 - **`assets/`**: Contains static assets used by the application.
     - **`big.flf`**: FIGlet font file.
+    - **`weather_yr.csv`**: Weather data for YR service.
     - **`weather.json`**: Weather-related configuration or data.
-- **`cmd/`**: Contains the main application entry points.
+- **`cmd/`**: Contains the main application entry points and commands.
     - **`main.go`**: The primary executable file that starts the StatusApp.
+    - **`fetch.go`**: Logic for fetching data.
+    - **`update.go`**: Logic for updating data.
+    - **`view.go`**: Logic for displaying data.
+    - **`types.go`**: Type definitions for the `cmd` package.
 - **`configs/`**: Stores application configuration files.
     - **`constants.go`**: Defines various constants used throughout the application.
-- **`deployments/`**: Contains deployment-related files.
-    - **`.env`**: Environment variables for deployment.
-    - **`StatusApp`**: Deployment script or configuration for the application.
+- **`deployments/`**: Contains deployment-related files (currently empty).
 - **`docs/`**: Project documentation files.
-    - **`codebase.md`**: Overview of the codebase (this file).
+    - **`codebase.md`**: Overview of the codebase.
     - **`migration.md`**: Documentation related to data migrations or upgrades.
+    - **`ProjectUpdate.md`**: Document detailing project updates.
+    - **`Restructure.md`**: Document detailing project restructuring.
     - **`structure.md`**: Describes the project's directory structure (this file).
-- **`internal/`**: Contains internal application logic, not intended for external consumption.
-    - **`models/`**: Defines data structures and models.
-        - **`models.go`**: Go struct definitions for various data entities.
-    - **`renderers/`**: Logic for rendering different status components.
-        - **`clock.go`**: Handles rendering of the clock component.
-        - **`schedule.go`**: Handles rendering of the schedule component.
-        - **`tailscale.go`**: Handles rendering of the Tailscale status component.
-        - **`weather.go`**: Handles rendering of the weather component.
-    - **`schedule/`**: Logic related to scheduling.
-        - **`loader.go`**: Loads and manages schedule data.
-    - **`tailscale/`**: Interacts with the Tailscale API.
-        - **`webrequests.go`**: Handles web requests to the Tailscale API.
-    - **`weather/`**: Interacts with a weather API.
-        - **`webrequests.go`**: Handles web requests to the weather API.
+- **`internal/`**: Contains internal application logic, not intended for external consumption. Each sub-directory represents a distinct feature or service.
+- **`pkg/`**: Contains shared libraries that are ok to be used by external applications.
+    - **`core/`**: Core types for the application.
+        - **`types.go`**: Defines core data structures.
 - **`scripts/`**: Contains various utility scripts.
     - **`Build.sh`**: Script to build the application.
     - **`BuildAndRun.sh`**: Script to build and run the application.
@@ -44,12 +39,17 @@ This document outlines the directory and file structure of the StatusApp project
 
 ## `internal/` Directory Breakdown
 
-The `internal/` directory is central to the application's logic, organizing code by domain or feature. Each subdirectory within `internal/` typically encapsulates a specific part of the application's functionality, promoting modularity and maintainability.
+The `internal/` directory is central to the application's logic, organizing code by feature. This modular structure separates concerns, making the codebase easier to navigate and maintain. Each subdirectory typically contains a `client.go` for API interactions, `types.go` for data structures, and a `view.go` for rendering the UI component.
 
-- **`models/`**: Standard Go structs that represent the data used and manipulated by the application.
-- **`renderers/`**: Modules responsible for taking application data and transforming it into a format suitable for display in the terminal UI. Each `.go` file here corresponds to a distinct UI component or "widget."
-- **`schedule/`**: Contains the business logic for managing events, parsing schedule files, and determining what to display.
-- **`tailscale/`**: Abstraction layer for interacting with Tailscale's API, handling authentication and data retrieval.
-- **`weather/`**: Abstraction layer for interacting with a weather service API, handling requests and parsing responses.
+- **`clock/`**: Displays the current time.
+    - **`view.go`**: Renders the clock component.
+- **`common/`**: Shared utilities used across different internal packages.
+    - **`time.go`**: Time-related utility functions.
+- **`hosthatch/`**: Interacts with the HostHatch API.
+- **`schedule/`**: Manages and displays schedule information.
+- **`tailscale/`**: Interacts with the Tailscale API to get network device status.
+- **`truenas/`**: Interacts with the TrueNAS API to get system status.
+- **`upcloud/`**: Interacts with the UpCloud API.
+- **`weather/`**: Fetches and displays weather information.
 
 This structure aims to keep the codebase organized, making it easier to navigate, understand, and maintain.
