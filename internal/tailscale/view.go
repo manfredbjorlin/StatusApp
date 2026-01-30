@@ -2,6 +2,7 @@ package tailscale
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -24,6 +25,7 @@ func View(
 
 	fmt.Fprintf(&sb, "%s\n\n", configs.BoldText.Render("\uef08 The Herd Valley"))
 
+	hostname, _ := os.Hostname()
 	for i, device := range devices {
 		deviceIcon := ""
 		switch device.Os {
@@ -43,11 +45,14 @@ func View(
 
 		caser := cases.Title(language.BrazilianPortuguese)
 		name := caser.String(strings.Split(device.Name, ".")[0])
+		if device.Hostname == hostname {
+			name += " (this)"
+		}
+		spacing := 20 - len(name)
 		nameStyle := lipgloss.NewStyle()
 		nameStyle = configs.SetBg(nameStyle, i)
 		exitIcon := ""
 		keyIcon := ""
-		spacing := 20 - len(name)
 		if len(device.AdvertisedRoutes) > 0 {
 			exitIcon = nameStyle.Render(
 				" ",
