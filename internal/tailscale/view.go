@@ -45,7 +45,31 @@ func View(
 		name := caser.String(strings.Split(device.Name, ".")[0])
 		nameStyle := lipgloss.NewStyle()
 		nameStyle = configs.SetBg(nameStyle, i)
-		sb.WriteString(nameStyle.Render(fmt.Sprintf(" % -20s", name)))
+		exitIcon := ""
+		keyIcon := ""
+		spacing := 20 - len(name)
+		if len(device.AdvertisedRoutes) > 0 {
+			exitIcon = nameStyle.Render(
+				" ",
+			) + nameStyle.Foreground(configs.NiceBlue).
+				Render("\uea6e")
+			spacing -= 2
+		}
+		if device.KeyExpiryDisabled {
+			keyIcon = nameStyle.Render(
+				" ",
+			) + nameStyle.Foreground(configs.NiceBlue).
+				Render("\ueb11")
+			spacing -= 2
+		}
+		sb.WriteString(
+			" " + nameStyle.Render(
+				name,
+			) + exitIcon + keyIcon + nameStyle.Render(strings.Repeat(
+				" ",
+				spacing,
+			)),
+		)
 
 		if device.ConnectedToControl || !alternatingText {
 			updateStyle := greenBold

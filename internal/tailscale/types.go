@@ -11,6 +11,8 @@ type Device struct {
 	ClientVersion      string    `json:"clientVersion"`
 	UpdateAvailable    bool      `json:"updateAvailable"`
 	LastSeen           time.Time `json:"lastSeen"`
+	AdvertisedRoutes   []string  `json:"advertisedRoutes"`
+	KeyExpiryDisabled  bool      `json:"keyExpiryDisabled"`
 }
 
 // Devices is a wrapper for a list of devices, matching the API response.

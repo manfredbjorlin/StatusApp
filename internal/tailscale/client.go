@@ -42,7 +42,7 @@ func (c *Client) GetMachines(ctx context.Context) (Devices, error) {
 	req, err := http.NewRequestWithContext(
 		ctx,
 		"GET",
-		fmt.Sprintf("%s/tailnet/%s/devices", c.baseURL, c.tailnet),
+		fmt.Sprintf("%s/tailnet/%s/devices?fields=all", c.baseURL, c.tailnet),
 		nil,
 	)
 	if err != nil {
