@@ -5,10 +5,10 @@ go 1.25.5
 require (
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
+	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/mbndr/figlet4go v0.0.0-20190224160619-d6cef5b186ea
 	golang.org/x/text v0.33.0
-	github.com/google/uuid v1.6.0
 )
 
 require (
@@ -16,6 +16,7 @@ require (
 	github.com/charmbracelet/colorprofile v0.4.1 // indirect
 	github.com/charmbracelet/x/ansi v0.11.3 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.14 // indirect
+	github.com/charmbracelet/x/exp/golden v0.0.0-20241011142426-46044092ad91 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
 	github.com/clipperhouse/displaywidth v0.7.0 // indirect
 	github.com/clipperhouse/stringish v0.1.1 // indirect

@@ -3,6 +3,7 @@ package core
 import (
 	"time"
 
+	"StatusApp/internal/exaroton"
 	"StatusApp/internal/hosthatch"
 	"StatusApp/internal/schedule"
 	"StatusApp/internal/tailscale"
@@ -25,4 +26,6 @@ type MainModel struct {
 	HostHatchServers   []hosthatch.Server
 	UpCloudServers     []upcloud.Server
 	UpcloudAccountInfo upcloud.AccountInfo
+	ExarotonServers    []exaroton.Server
+	ExarotonCreditLeft float64
 }

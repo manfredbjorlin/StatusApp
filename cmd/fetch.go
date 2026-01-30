@@ -53,17 +53,24 @@ func fetchData(m *BubbleTeaModel) tea.Cmd {
 				result.HostHatchServers, err = m.HostHatchClient.ListServers(ctx)
 				errs <- err
 			}, func() {
-				result.UpCloudServers, err = m.UpCludClient.ListServers(ctx)
+				result.UpCloudServers, err = m.UpCloudClient.ListServers(ctx)
 				errs <- err
 			}, func() {
-				_, remaining, err := m.UpCludClient.RemainingCredits(
+				result.ExarotonServers, err = m.ExarotonClient.ListServers(ctx)
+				if err != nil {
+					errs <- err
+				}
+				result.ExarotonCreditLeft, err = m.ExarotonClient.RemainingCredits(ctx)
+				errs <- err
+			}, func() {
+				_, remaining, err := m.UpCloudClient.RemainingCredits(
 					ctx,
 				)
 				if err != nil {
 					errs <- err
 					return
 				}
-				currency, usage, err := m.UpCludClient.BillingSummary(
+				currency, usage, err := m.UpCloudClient.BillingSummary(
 					ctx,
 					time.Now().Year(),
 					int(time.Now().Month()),

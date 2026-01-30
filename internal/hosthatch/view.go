@@ -37,8 +37,8 @@ func Status(servers []Server) string {
 func View(servers []Server, alternatingText bool) string {
 	result := configs.BoldText.Foreground(configs.BrightGreen).
 		Width(configs.ScheduleStyle.GetWidth()).
-		AlignHorizontal(lipgloss.Center).
-		Render("HostHatch")
+		AlignHorizontal(lipgloss.Left).
+		Render(" HostHatch")
 	result += "\n"
 
 	tableRows := make([][]string, 0)

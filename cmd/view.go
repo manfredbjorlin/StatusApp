@@ -10,6 +10,7 @@ import (
 
 	"StatusApp/configs"
 	"StatusApp/internal/clock"
+	"StatusApp/internal/exaroton"
 	"StatusApp/internal/hosthatch"
 	"StatusApp/internal/schedule"
 	"StatusApp/internal/truenas"
@@ -60,6 +61,7 @@ func ViewServers(m BubbleTeaModel) string {
 			m.AlternatingText,
 			m.Data.UpcloudAccountInfo,
 		),
+		exaroton.View(m.Data.ExarotonServers, m.AlternatingText, m.Data.ExarotonCreditLeft),
 	)
 	return mainContent
 }
@@ -87,6 +89,8 @@ func ViewMain(m BubbleTeaModel, topLeft string) string {
 			m.Data.HostHatchServers,
 		) + " - " + upcloud.Status(
 			m.Data.UpCloudServers,
+		) + " - " + exaroton.Status(
+			m.Data.ExarotonServers,
 		),
 	)
 

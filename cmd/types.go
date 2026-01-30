@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"StatusApp/configs"
+	"StatusApp/internal/exaroton"
 	"StatusApp/internal/hosthatch"
 	"StatusApp/internal/tailscale"
 	"StatusApp/internal/truenas"
@@ -18,7 +19,8 @@ type BubbleTeaModel struct {
 	WeatherClient   weather.DataProvider
 	TruenasClient   truenas.AppGetter
 	HostHatchClient hosthatch.HostHatchClient
-	UpCludClient    upcloud.UpCloudClient
+	UpCloudClient   upcloud.UpCloudClient
+	ExarotonClient  exaroton.ExarotonClient
 
 	CurrentScreen             configs.Screen
 	WindowWidth, WindowHeight int
@@ -46,7 +48,8 @@ func newModel() BubbleTeaModel {
 			os.Getenv("TRUENAS_API_KEY"),
 		),
 		HostHatchClient: hosthatch.NewClient(os.Getenv("HOSTHATCH_API_KEY")),
-		UpCludClient:    upcloud.NewClient(os.Getenv("UPCLOUD_API_KEY")),
+		UpCloudClient:   upcloud.NewClient(os.Getenv("UPCLOUD_API_KEY")),
+		ExarotonClient:  exaroton.NewClient(os.Getenv("EXAROTON_API_KEY")),
 		TickCounter:     60, // Start ready to fetch
 		AlternatingText: false,
 		Data:            core.MainModel{},

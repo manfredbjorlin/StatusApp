@@ -73,10 +73,6 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m BubbleTeaModel) View() string {
-	if m.WindowWidth == 0 || m.WindowHeight == 0 || m.Data.Schedule == nil {
-		return ViewInitialing(m)
-	}
-
 	if m.Data.Error != nil {
 		return lipgloss.Place(
 			m.WindowWidth,
@@ -85,6 +81,9 @@ func (m BubbleTeaModel) View() string {
 			lipgloss.Center,
 			fmt.Sprintf("Error: %s", m.Data.Error.Error()),
 		)
+	}
+	if m.WindowWidth == 0 || m.WindowHeight == 0 || m.Data.Schedule == nil {
+		return ViewInitialing(m)
 	}
 	var mainContent string
 	var menuItemOrder []string

@@ -32,27 +32,36 @@ func Status(servers []Server) string {
 }
 
 func View(servers []Server, alternatingText bool, accountInfo AccountInfo) string {
-	result := configs.BoldText.Foreground(configs.BrightGreen).
-		Width(configs.ScheduleStyle.GetWidth()).
-		AlignHorizontal(lipgloss.Center).
-		Render("UpCloud")
-	result += "\n"
 	accountInfo.Currency = strings.ReplaceAll(accountInfo.Currency, "EUR", "€")
-	result += lipgloss.NewStyle().
+	name := "Upcloud"
+	nameFormatted := configs.BoldText.Foreground(configs.BrightGreen).Render(name)
+
+	infoText := fmt.Sprintf(
+		"Remaining Credits: %s %0.2f - Monthly usage: %s %0.2f",
+		accountInfo.Currency,
+		accountInfo.RemainingCredits,
+		accountInfo.Currency,
+		accountInfo.BillingSummary,
+	)
+	infoTextFormatted := fmt.Sprintf(
+		"%s %s %0.2f - %s %s %0.2f",
+		configs.BoldText.Render(
+			"Remaining Credits:",
+		),
+		accountInfo.Currency,
+		accountInfo.RemainingCredits,
+		configs.BoldText.Render("Montly usage:"),
+		accountInfo.Currency,
+		accountInfo.BillingSummary,
+	)
+
+	spacing := configs.ScheduleStyle.GetWidth() - len([]rune(name)) - len([]rune(infoText)) - 2
+	spacingString := strings.Repeat(" ", spacing)
+
+	result := lipgloss.NewStyle().
 		Width(configs.ScheduleStyle.GetWidth()).
 		AlignHorizontal(lipgloss.Center).
-		Render(
-			fmt.Sprintf(
-				"%s %s %0.2f - %s %s %0.2f",
-				configs.BoldText.Render(
-					"Remaining Credits:",
-				),
-				accountInfo.Currency,
-				accountInfo.RemainingCredits,
-				configs.BoldText.Render("Montly usage:"),
-				accountInfo.Currency,
-				accountInfo.BillingSummary,
-			))
+		Render(nameFormatted + spacingString + infoTextFormatted)
 
 	result += "\n"
 
