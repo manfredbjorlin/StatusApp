@@ -1,6 +1,10 @@
 package main
 
 import (
+	"fmt"
+	"strings"
+	"time"
+
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mbndr/figlet4go"
 
@@ -21,6 +25,26 @@ func ViewInitialing(m BubbleTeaModel) string {
 		lipgloss.Center,
 		configs.ClockStyle.Render("Initializing..."),
 	)
+}
+
+func ViewMenu(items map[string]string, keyOrder []string, lastUpdated time.Time) string {
+	var sb strings.Builder
+	hotKeyStyle := configs.BoldText.Foreground(configs.NiceBlue)
+	menuTextStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(configs.ColorDimGrey))
+	menuStyle := lipgloss.NewStyle().
+		Width(configs.ScheduleStyle.GetWidth()).
+		AlignHorizontal(lipgloss.Center)
+
+	for _, value := range keyOrder {
+		if text, ok := items[value]; ok {
+			sb.WriteString(hotKeyStyle.Render(value))
+			sb.WriteString(menuTextStyle.Render(fmt.Sprintf(": %s | ", text)))
+		}
+	}
+
+	return menuStyle.Render(sb.String() + menuTextStyle.Render(
+		fmt.Sprintf("Last update: %s", lastUpdated.Format("15:04:05")),
+	))
 }
 
 func ViewServers(m BubbleTeaModel) string {

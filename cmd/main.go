@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -117,7 +116,7 @@ func (m BubbleTeaModel) View() string {
 		"e": "exclude",
 	}
 
-	menu := renderMenu(menuItems, menuItemOrder, m.Data.LastUpdated)
+	menu := ViewMenu(menuItems, menuItemOrder, m.Data.LastUpdated)
 
 	final := lipgloss.JoinVertical(lipgloss.Top, mainContent, menu)
 
@@ -128,26 +127,6 @@ func (m BubbleTeaModel) View() string {
 		lipgloss.Center,
 		final,
 	)
-}
-
-func renderMenu(items map[string]string, keyOrder []string, lastUpdated time.Time) string {
-	var sb strings.Builder
-	hotKeyStyle := configs.BoldText.Foreground(configs.NiceBlue)
-	menuTextStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(configs.ColorDimGrey))
-	menuStyle := lipgloss.NewStyle().
-		Width(configs.ScheduleStyle.GetWidth()).
-		AlignHorizontal(lipgloss.Center)
-
-	for _, value := range keyOrder {
-		if text, ok := items[value]; ok {
-			sb.WriteString(hotKeyStyle.Render(value))
-			sb.WriteString(menuTextStyle.Render(fmt.Sprintf(": %s | ", text)))
-		}
-	}
-
-	return menuStyle.Render(sb.String() + menuTextStyle.Render(
-		fmt.Sprintf("Last update: %s", lastUpdated.Format("15:04:05")),
-	))
 }
 
 func main() {
