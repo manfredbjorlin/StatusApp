@@ -10,16 +10,10 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/joho/godotenv"
-	"github.com/mbndr/figlet4go"
 
 	"StatusApp/configs"
-	"StatusApp/internal/clock"
-	"StatusApp/internal/hosthatch"
-	"StatusApp/internal/schedule"
 	"StatusApp/internal/tailscale"
 	"StatusApp/internal/truenas"
-	"StatusApp/internal/upcloud"
-	"StatusApp/internal/weather"
 )
 
 func tickCmd() tea.Cmd {
@@ -81,13 +75,7 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m BubbleTeaModel) View() string {
 	if m.WindowWidth == 0 || m.WindowHeight == 0 || m.Data.Schedule == nil {
-		return lipgloss.Place(
-			m.WindowWidth,
-			m.WindowHeight,
-			lipgloss.Center,
-			lipgloss.Center,
-			configs.ClockStyle.Render("Initializing..."),
-		)
+		return ViewInitialing(m)
 	}
 
 	if m.Data.Error != nil {
@@ -100,59 +88,26 @@ func (m BubbleTeaModel) View() string {
 		)
 	}
 	var mainContent string
-	if m.CurrentScreen == configs.ScreenServers {
-		ascii := figlet4go.NewAsciiRender()
-		header, _ := ascii.Render("Servers")
-		heading := lipgloss.NewStyle().Foreground(configs.HotPink).Render(header)
-		mainContent = lipgloss.JoinVertical(
-			lipgloss.Top,
-			heading,
-			hosthatch.View(m.Data.HostHatchServers, m.AlternatingText),
-			upcloud.View(
-				m.Data.UpCloudServers,
-				m.AlternatingText,
-				m.Data.UpcloudAccountInfo,
-			),
-		)
-	} else {
-		weatherView := weather.View(
-			m.Data.Weather,
-			m.Data.WaterTemperature,
+	var menuItemOrder []string
+
+	switch m.CurrentScreen {
+	case configs.ScreenServers:
+		mainContent = ViewServers(m)
+		menuItemOrder = []string{"q", "r", "m", "a"}
+	case configs.ScreenMain:
+		topLeft := tailscale.View(
+			m.Data.TailscaleDevices.Devices,
+			m.Data.TailscaleKeyExpiry,
 			m.AlternatingText,
 		)
-
-		clockView := clock.RenderClock(weatherView)
-
-		var topLeft string
-		if m.CurrentScreen == configs.ScreenMain {
-			topLeft = tailscale.View(
-				m.Data.TailscaleDevices.Devices,
-				m.Data.TailscaleKeyExpiry,
-				m.AlternatingText,
-			)
-		} else {
-			topLeft = truenas.View(m.Data.TruenasApps)
-		}
-
-		top := lipgloss.JoinHorizontal(lipgloss.Left, topLeft, clockView)
-
-		scheduleView := schedule.View(m.Data.Schedule)
-
-		statusStyle := lipgloss.NewStyle().
-			Width(configs.ScheduleStyle.GetWidth()).
-			AlignHorizontal(lipgloss.Center)
-		statusLine := statusStyle.Render(
-			truenas.Status(
-				m.Data.TruenasApps,
-			) + " - " + hosthatch.Status(
-				m.Data.HostHatchServers,
-			) + " - " + upcloud.Status(
-				m.Data.UpCloudServers,
-			),
-		)
-
-		mainContent = lipgloss.JoinVertical(lipgloss.Left, statusLine, top, scheduleView)
+		mainContent = ViewMain(m, topLeft)
+		menuItemOrder = []string{"q", "r", "a", "s"}
+	case configs.ScreenApps:
+		topLeft := truenas.View(m.Data.TruenasApps)
+		mainContent = ViewMain(m, topLeft)
+		menuItemOrder = []string{"q", "r", "m", "s"}
 	}
+
 	menuItems := map[string]string{
 		"q": "quit",
 		"r": "refresh",
@@ -160,15 +115,6 @@ func (m BubbleTeaModel) View() string {
 		"s": "servers",
 		"m": "main screen",
 		"e": "exclude",
-	}
-	var menuItemOrder []string
-	switch m.CurrentScreen {
-	case configs.ScreenMain:
-		menuItemOrder = []string{"q", "r", "a", "s"}
-	case configs.ScreenApps:
-		menuItemOrder = []string{"q", "r", "m", "s"}
-	case configs.ScreenServers:
-		menuItemOrder = []string{"q", "r", "m", "a"}
 	}
 
 	menu := renderMenu(menuItems, menuItemOrder, m.Data.LastUpdated)
