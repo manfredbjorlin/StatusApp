@@ -12,18 +12,6 @@ import (
 )
 
 type MainModel struct {
-	// Clients
-	TailscaleClient tailscale.MachineGetter
-	WeatherClient   weather.DataProvider
-	TruenasClient   truenas.AppGetter
-	HostHatchClient hosthatch.HostHatchClient
-	UpCludClient    upcloud.UpCloudClient
-
-	// UI State
-	WindowWidth, WindowHeight int
-	TickCounter               int
-	AlternatingText           bool
-
 	// Data
 	Error              error
 	LastUpdated        time.Time

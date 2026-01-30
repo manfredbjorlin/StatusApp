@@ -55,6 +55,8 @@ var (
 			Bold(true).
 			Foreground(HeaderText)
 
+	OkIcon      = lipgloss.NewStyle().Foreground(BrightGreen).Render("\uf00c")
+	FailIcon    = lipgloss.NewStyle().Foreground(HotPink).Render("\uf00d")
 	RunningIcon = lipgloss.NewStyle().Foreground(BrightGreen).Render("\uf04b")
 	StoppedIcon = lipgloss.NewStyle().Foreground(HotPink).Render("\uf04d")
 )

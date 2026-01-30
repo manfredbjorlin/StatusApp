@@ -11,26 +11,18 @@ import (
 
 	"StatusApp/configs"
 	"StatusApp/internal/common"
-	"StatusApp/internal/truenas"
 )
 
 func View(
 	devices []Device,
 	keyExpiry time.Time,
-	truenasApps []truenas.App,
 	alternatingText bool,
 ) string {
 	var sb strings.Builder
 	greenBold := lipgloss.NewStyle().Bold(true).Foreground(configs.BrightGreen)
-
 	pinkBold := lipgloss.NewStyle().Bold(true).Foreground(configs.HotPink)
 
-	yes, no := truenas.GetAppStatus(truenasApps)
-	fmt.Fprintf(&sb, "% -15s", "Dodo Apps:")
-	sb.WriteString(greenBold.Render("\uf00c"))
-	fmt.Fprintf(&sb, " %d | ", yes)
-	sb.WriteString(pinkBold.Render("\uf00d"))
-	fmt.Fprintf(&sb, " %d\n\n", no)
+	fmt.Fprintf(&sb, "%s\n\n", configs.BoldText.Render("\uef08 The Herd Valley"))
 
 	for i, device := range devices {
 		deviceIcon := ""

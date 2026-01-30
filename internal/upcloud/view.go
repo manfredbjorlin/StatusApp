@@ -28,7 +28,7 @@ func Status(servers []Server) string {
 		result = append(result, fmt.Sprintf("%s %s", icon, server.Title))
 	}
 
-	return strings.Join(result, " | ")
+	return strings.Join(result, " - ")
 }
 
 func View(servers []Server, alternatingText bool, accountInfo AccountInfo) string {
@@ -36,6 +36,24 @@ func View(servers []Server, alternatingText bool, accountInfo AccountInfo) strin
 		Width(configs.ScheduleStyle.GetWidth()).
 		AlignHorizontal(lipgloss.Center).
 		Render("UpCloud")
+	result += "\n"
+	accountInfo.Currency = strings.ReplaceAll(accountInfo.Currency, "EUR", "€")
+	result += lipgloss.NewStyle().
+		Width(configs.ScheduleStyle.GetWidth()).
+		AlignHorizontal(lipgloss.Center).
+		Render(
+			fmt.Sprintf(
+				"%s %s %0.2f - %s %s %0.2f",
+				configs.BoldText.Render(
+					"Remaining Credits:",
+				),
+				accountInfo.Currency,
+				accountInfo.RemainingCredits,
+				configs.BoldText.Render("Montly usage:"),
+				accountInfo.Currency,
+				accountInfo.BillingSummary,
+			))
+
 	result += "\n"
 
 	tableRows := make([][]string, 0)
@@ -85,23 +103,5 @@ func View(servers []Server, alternatingText bool, accountInfo AccountInfo) strin
 
 	result += "\n"
 
-	accountInfo.Currency = strings.ReplaceAll(accountInfo.Currency, "EUR", "€")
-	result += lipgloss.NewStyle().
-		Width(configs.ScheduleStyle.GetWidth()).
-		AlignHorizontal(lipgloss.Center).
-		Render(
-			fmt.Sprintf(
-				"%s %s %0.2f - %s %s %0.2f",
-				configs.BoldText.Render(
-					"Remaining Credits:",
-				),
-				accountInfo.Currency,
-				accountInfo.RemainingCredits,
-				configs.BoldText.Render("Montly usage:"),
-				accountInfo.Currency,
-				accountInfo.BillingSummary,
-			))
-
-	result += "\n"
 	return result
 }

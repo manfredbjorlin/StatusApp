@@ -13,6 +13,11 @@ import (
 	"StatusApp/configs"
 )
 
+func Status(apps []App) string {
+	upToDate, toUpdate := GetAppStatus(apps)
+	return fmt.Sprintf("Dodo: %s %d | %s %d", configs.OkIcon, upToDate, configs.FailIcon, toUpdate)
+}
+
 func View(apps []App) string {
 	greenBold := lipgloss.NewStyle().Bold(true).Foreground(configs.BrightGreen)
 	pinkBold := lipgloss.NewStyle().Bold(true).Foreground(configs.HotPink)

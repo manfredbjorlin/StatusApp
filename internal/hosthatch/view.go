@@ -31,7 +31,7 @@ func Status(servers []Server) string {
 		result = append(result, fmt.Sprintf("%s %s", icon, caser.String(server.Hostname)))
 	}
 
-	return strings.Join(result, " | ")
+	return strings.Join(result, " - ")
 }
 
 func View(servers []Server, alternatingText bool) string {
