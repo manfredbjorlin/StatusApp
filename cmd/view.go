@@ -73,7 +73,7 @@ func ViewMain(m BubbleTeaModel, topLeft string) string {
 		m.AlternatingText,
 	)
 
-	clockView := clock.RenderClock(weatherView)
+	clockView := clock.RenderClock(weatherView, m.Data.Error)
 
 	top := lipgloss.JoinHorizontal(lipgloss.Left, topLeft, clockView)
 

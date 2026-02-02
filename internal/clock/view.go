@@ -9,13 +9,18 @@ import (
 	"StatusApp/configs"
 )
 
-// RenderClock creates a string with the ASCII art clock and status information.
-func RenderClock(weatherPart string) string {
+// Is it the best thing to have the clock view render the error message? Maybe not, but it makes it clean...
+func RenderClock(weatherPart string, err error) string {
 	currentTime := time.Now()
 
-	// Render ASCII Clock
 	ascii := figlet4go.NewAsciiRender()
-	clockStr, _ := ascii.Render(currentTime.Format("15:04"))
+	var clockStr string
+	if err == nil {
+		clockStr, _ = ascii.Render(currentTime.Format("15:04"))
+	} else {
+		clockStr, _ = ascii.Render("Error")
+		weatherPart = err.Error()
+	}
 
 	lipglossPink := lipgloss.NewStyle().
 		Bold(true).
@@ -25,9 +30,6 @@ func RenderClock(weatherPart string) string {
 
 	clock := lipglossPink.Render(clockStr)
 
-	// Prepare status line (error or weather)
-
-	// Join components vertically
 	withText := lipgloss.JoinVertical(
 		lipgloss.Center,
 		clock,
