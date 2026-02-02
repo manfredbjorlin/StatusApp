@@ -37,6 +37,7 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case fetchedDataMsg:
 		m.Data = msg.data
 		m.Data.LastUpdated = msg.time
+		m.Data.Error = nil
 		return m, nil
 	case errorMsg:
 		m.Data.Error = msg.err

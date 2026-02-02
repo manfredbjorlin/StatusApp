@@ -68,8 +68,8 @@ func View(
 			spacing -= 2
 		}
 		sb.WriteString(
-			" " + nameStyle.Render(
-				name,
+			nameStyle.Render(
+				" "+name,
 			) + exitIcon + keyIcon + nameStyle.Render(strings.Repeat(
 				" ",
 				spacing,

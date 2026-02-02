@@ -20,6 +20,9 @@ func RenderClock(weatherPart string, err error) string {
 	} else {
 		clockStr, _ = ascii.Render("Error")
 		weatherPart = err.Error()
+		if len(weatherPart) > 38 {
+			weatherPart = weatherPart[:35] + "..."
+		}
 	}
 
 	lipglossPink := lipgloss.NewStyle().
