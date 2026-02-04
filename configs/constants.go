@@ -41,7 +41,7 @@ var (
 			BorderForeground(NiceBlue)
 
 	TailscaleStyle = lipgloss.NewStyle().
-			Padding(1, 2, 0, 2).
+			Padding(0, 2, 0, 2).
 			Margin(1, 1, 1, 1).
 			Width(35)
 
@@ -67,6 +67,7 @@ const (
 	ScreenMain Screen = iota
 	ScreenApps
 	ScreenServers
+	ScreenSyncthing
 )
 
 func SetBg(style lipgloss.Style, line int) lipgloss.Style {

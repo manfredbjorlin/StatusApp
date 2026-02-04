@@ -23,7 +23,13 @@ func View(
 	greenBold := lipgloss.NewStyle().Bold(true).Foreground(configs.BrightGreen)
 	pinkBold := lipgloss.NewStyle().Bold(true).Foreground(configs.HotPink)
 
-	fmt.Fprintf(&sb, "%s\n\n", configs.BoldText.Render("\uef08 The Herd Valley"))
+	fmt.Fprintf(
+		&sb,
+		"%s\n",
+		strings.Repeat(" ", 6)+configs.BoldText.Render("\uef08 The Herd Valley"),
+	)
+
+	sb.WriteString("\n")
 
 	hostname, _ := os.Hostname()
 	for i, device := range devices {

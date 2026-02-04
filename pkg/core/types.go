@@ -6,6 +6,7 @@ import (
 	"StatusApp/internal/exaroton"
 	"StatusApp/internal/hosthatch"
 	"StatusApp/internal/schedule"
+	"StatusApp/internal/syncthing"
 	"StatusApp/internal/tailscale"
 	"StatusApp/internal/truenas"
 	"StatusApp/internal/upcloud"
@@ -13,19 +14,19 @@ import (
 )
 
 type MainModel struct {
-	// Data
-	Error              error
-	LastUpdated        time.Time
-	Schedule           []schedule.Meeting
-	TailscaleDevices   tailscale.Devices
-	TailscaleKeyExpiry time.Time
-	TruenasApps        []truenas.App
-	Weather            *weather.WeatherForecastInternal
-	WaterTemperature   weather.WaterTemperatureInternal
-	TruenasUpdateList  map[int]string
-	HostHatchServers   []hosthatch.Server
-	UpCloudServers     []upcloud.Server
-	UpcloudAccountInfo upcloud.AccountInfo
-	ExarotonServers    []exaroton.Server
-	ExarotonCreditLeft float64
+	Error                error
+	LastUpdated          time.Time
+	Schedule             []schedule.Meeting
+	TailscaleDevices     tailscale.Devices
+	TailscaleKeyExpiry   time.Time
+	TruenasApps          []truenas.App
+	Weather              *weather.WeatherForecastInternal
+	WaterTemperature     weather.WaterTemperatureInternal
+	TruenasUpdateList    map[int]string
+	HostHatchServers     []hosthatch.Server
+	UpCloudServers       []upcloud.Server
+	UpcloudAccountInfo   upcloud.AccountInfo
+	ExarotonServers      []exaroton.Server
+	ExarotonCreditLeft   float64
+	SyncthingConnections []syncthing.Connection
 }

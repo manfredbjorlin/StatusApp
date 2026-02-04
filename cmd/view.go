@@ -13,6 +13,7 @@ import (
 	"StatusApp/internal/exaroton"
 	"StatusApp/internal/hosthatch"
 	"StatusApp/internal/schedule"
+	"StatusApp/internal/syncthing"
 	"StatusApp/internal/truenas"
 	"StatusApp/internal/upcloud"
 	"StatusApp/internal/weather"
@@ -44,7 +45,7 @@ func ViewMenu(items map[string]string, keyOrder []string, lastUpdated time.Time)
 	}
 
 	return menuStyle.Render(sb.String() + menuTextStyle.Render(
-		fmt.Sprintf("Last update: %s", lastUpdated.Format("15:04:05")),
+		lastUpdated.Format("15:04:05"),
 	))
 }
 
@@ -91,6 +92,8 @@ func ViewMain(m BubbleTeaModel, topLeft string) string {
 			m.Data.UpCloudServers,
 		) + " - " + exaroton.Status(
 			m.Data.ExarotonServers,
+		) + " - " + syncthing.Status(
+			m.Data.SyncthingConnections,
 		),
 	)
 

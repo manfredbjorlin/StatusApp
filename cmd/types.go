@@ -7,6 +7,7 @@ import (
 	"StatusApp/configs"
 	"StatusApp/internal/exaroton"
 	"StatusApp/internal/hosthatch"
+	"StatusApp/internal/syncthing"
 	"StatusApp/internal/tailscale"
 	"StatusApp/internal/truenas"
 	"StatusApp/internal/upcloud"
@@ -21,6 +22,7 @@ type BubbleTeaModel struct {
 	HostHatchClient hosthatch.HostHatchClient
 	UpCloudClient   upcloud.UpCloudClient
 	ExarotonClient  exaroton.ExarotonClient
+	SyncthingClient syncthing.SyncthingClient
 
 	CurrentScreen             configs.Screen
 	WindowWidth, WindowHeight int
@@ -50,6 +52,7 @@ func newModel() BubbleTeaModel {
 		HostHatchClient: hosthatch.NewClient(os.Getenv("HOSTHATCH_API_KEY")),
 		UpCloudClient:   upcloud.NewClient(os.Getenv("UPCLOUD_API_KEY")),
 		ExarotonClient:  exaroton.NewClient(os.Getenv("EXAROTON_API_KEY")),
+		SyncthingClient: syncthing.NewClient(os.Getenv("SYNCTHING_API_KEY")),
 		TickCounter:     60, // Start ready to fetch
 		AlternatingText: false,
 		Data:            core.MainModel{},

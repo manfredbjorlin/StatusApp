@@ -11,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"StatusApp/configs"
+	"StatusApp/internal/syncthing"
 	"StatusApp/internal/tailscale"
 	"StatusApp/internal/truenas"
 )
@@ -55,6 +56,8 @@ func (m BubbleTeaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.CurrentScreen = configs.ScreenMain
 		case "s":
 			m.CurrentScreen = configs.ScreenServers
+		case "y":
+			m.CurrentScreen = configs.ScreenSyncthing
 		}
 		number, err := strconv.Atoi(msg.String())
 		if m.CurrentScreen == configs.ScreenApps && err == nil {
@@ -92,7 +95,7 @@ func (m BubbleTeaModel) View() string {
 	switch m.CurrentScreen {
 	case configs.ScreenServers:
 		mainContent = ViewServers(m)
-		menuItemOrder = []string{"q", "r", "m", "a"}
+		menuItemOrder = []string{"q", "r", "m", "a", "y"}
 	case configs.ScreenMain:
 		topLeft := tailscale.View(
 			m.Data.TailscaleDevices.Devices,
@@ -100,10 +103,13 @@ func (m BubbleTeaModel) View() string {
 			m.AlternatingText,
 		)
 		mainContent = ViewMain(m, topLeft)
-		menuItemOrder = []string{"q", "r", "a", "s"}
+		menuItemOrder = []string{"q", "r", "a", "s", "y"}
 	case configs.ScreenApps:
 		topLeft := truenas.View(m.Data.TruenasApps)
 		mainContent = ViewMain(m, topLeft)
+		menuItemOrder = []string{"q", "r", "m", "s", "y"}
+	case configs.ScreenSyncthing:
+		mainContent = syncthing.View(m.Data.SyncthingConnections)
 		menuItemOrder = []string{"q", "r", "m", "s"}
 	}
 
@@ -114,6 +120,7 @@ func (m BubbleTeaModel) View() string {
 		"s": "servers",
 		"m": "main screen",
 		"e": "exclude",
+		"y": "syncthing",
 	}
 
 	menu := ViewMenu(menuItems, menuItemOrder, m.Data.LastUpdated)

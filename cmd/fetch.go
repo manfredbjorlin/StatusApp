@@ -63,6 +63,9 @@ func fetchData(m *BubbleTeaModel) tea.Cmd {
 				result.ExarotonCreditLeft, err = m.ExarotonClient.RemainingCredits(ctx)
 				errs <- err
 			}, func() {
+				result.SyncthingConnections, err = m.SyncthingClient.ListConnections(ctx)
+				errs <- err
+			}, func() {
 				_, remaining, err := m.UpCloudClient.RemainingCredits(
 					ctx,
 				)
