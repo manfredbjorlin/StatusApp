@@ -43,13 +43,15 @@ func View(connections []Connection) string {
 			connected = configs.OkIcon + " Connected"
 			lastSync = conn.LastSync.Format("15:04:05")
 		}
+		upMb := float64(conn.InBytesTotal) / 1024.00 / 1024.00
+		downMb := float64(conn.OutBytesTotal) / 1024.00 / 1024.00
 		row := []string{
 			conn.Device.Name,
 			connected,
 			lastSync,
 			conn.ClientVersion,
-			fmt.Sprint(conn.InBytesTotal),
-			fmt.Sprint(conn.OutBytesTotal),
+			fmt.Sprintf("%7.2f Mb", upMb),
+			fmt.Sprintf("%7.2f Mb", downMb),
 		}
 		tableRows = append(tableRows, row)
 	}
@@ -58,8 +60,8 @@ func View(connections []Connection) string {
 		"Status",
 		"Last Sync",
 		"Version",
-		"Bytes in",
-		"Bytes Out",
+		"Upload",
+		"Download",
 	}
 
 	result += table.New().
