@@ -86,8 +86,10 @@ func ViewMain(m BubbleTeaModel, topLeft string) string {
 	clockView := clock.RenderClock(weatherView, m.Data.Error)
 
 	top := lipgloss.JoinHorizontal(lipgloss.Left, topLeft, clockView)
+	top = lipgloss.PlaceHorizontal(m.WindowWidth, lipgloss.Center, top)
 
 	scheduleView := schedule.View(m.Data.Schedule)
+	scheduleView = lipgloss.PlaceHorizontal(m.WindowWidth, lipgloss.Center, scheduleView)
 
 	statusStyle := lipgloss.NewStyle().
 		Width(m.WindowWidth).
