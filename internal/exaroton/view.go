@@ -64,11 +64,11 @@ func View(servers []Server, alternatingText bool, remainingCredit float64) strin
 		configs.BoldText.Render("Remaining Credits: "),
 		remainingCredit,
 	)
-	spacing := configs.ScheduleStyle.GetWidth() - len([]rune(name)) - len([]rune(infoText)) - 4
+	spacing := configs.ApplicationWidth - len([]rune(name)) - len([]rune(infoText)) - 3
 	spacingString := strings.Repeat(" ", spacing)
 
 	result.WriteString(lipgloss.NewStyle().
-		Width(configs.ScheduleStyle.GetWidth()).
+		Width(configs.ApplicationWidth).
 		AlignHorizontal(lipgloss.Center).
 		Render(nameFormatted + spacingString + infoTextFormatted))
 
@@ -119,7 +119,7 @@ func View(servers []Server, alternatingText bool, remainingCredit float64) strin
 			}
 			return lipgloss.NewStyle()
 		}).
-		Width(configs.ScheduleStyle.GetWidth()).
+		Width(configs.ApplicationWidth).
 		String())
 
 	result.WriteString("\n")

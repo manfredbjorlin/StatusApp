@@ -28,7 +28,7 @@ func Status(connections []Connection) string {
 	)
 }
 
-func View(connections []Connection) string {
+func View(connections []Connection, windowWidth int) string {
 	ascii := figlet4go.NewAsciiRender()
 	header, _ := ascii.Render("Syncthing")
 	result := lipgloss.NewStyle().Foreground(configs.HotPink).Render(header)
@@ -75,8 +75,8 @@ func View(connections []Connection) string {
 			}
 			return lipgloss.NewStyle()
 		}).
-		Width(configs.ScheduleStyle.GetWidth()).
+		Width(configs.ApplicationWidth).
 		String()
 
-	return result + "\n"
+	return lipgloss.PlaceHorizontal(windowWidth, lipgloss.Center, result) + "\n"
 }

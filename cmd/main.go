@@ -109,7 +109,7 @@ func (m BubbleTeaModel) View() string {
 		mainContent = ViewMain(m, topLeft)
 		menuItemOrder = []string{"q", "r", "m", "s", "y"}
 	case configs.ScreenSyncthing:
-		mainContent = syncthing.View(m.Data.SyncthingConnections)
+		mainContent = syncthing.View(m.Data.SyncthingConnections, m.WindowWidth)
 		menuItemOrder = []string{"q", "r", "m", "s"}
 	}
 
@@ -123,7 +123,7 @@ func (m BubbleTeaModel) View() string {
 		"y": "syncthing",
 	}
 
-	menu := ViewMenu(menuItems, menuItemOrder, m.Data.LastUpdated)
+	menu := ViewMenu(menuItems, menuItemOrder, m.Data.LastUpdated, m.WindowWidth)
 
 	final := lipgloss.JoinVertical(lipgloss.Top, mainContent, menu)
 

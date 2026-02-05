@@ -36,7 +36,7 @@ func Status(servers []Server) string {
 
 func View(servers []Server, alternatingText bool) string {
 	result := configs.BoldText.Foreground(configs.BrightGreen).
-		Width(configs.ScheduleStyle.GetWidth()).
+		Width(configs.ApplicationWidth).
 		AlignHorizontal(lipgloss.Left).
 		Render(" HostHatch")
 	result += "\n"
@@ -94,7 +94,7 @@ func View(servers []Server, alternatingText bool) string {
 			}
 			return lipgloss.NewStyle()
 		}).
-		Width(configs.ScheduleStyle.GetWidth()).
+		Width(configs.ApplicationWidth).
 		String()
 
 	result += "\n"

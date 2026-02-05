@@ -34,6 +34,8 @@ var (
 	HeaderText   = lipgloss.Color(ColorWhite)
 	AltBgColor   = lipgloss.Color(ColorAltBg)
 
+	ApplicationWidth = 83
+
 	ClockStyle = lipgloss.NewStyle().
 			Padding(1, 2, 1, 2).
 			Margin(1, 1, 1, 1).
@@ -48,7 +50,7 @@ var (
 	ScheduleStyle = lipgloss.NewStyle().
 			Padding(1, 2, 1, 2).
 			Margin(0, 1, 1, 1).
-			Width(82).
+			Width(ApplicationWidth - 2).
 			BorderStyle(lipgloss.RoundedBorder())
 
 	BoldText = lipgloss.NewStyle().

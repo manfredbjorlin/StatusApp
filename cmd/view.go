@@ -29,12 +29,17 @@ func ViewInitialing(m BubbleTeaModel) string {
 	)
 }
 
-func ViewMenu(items map[string]string, keyOrder []string, lastUpdated time.Time) string {
+func ViewMenu(
+	items map[string]string,
+	keyOrder []string,
+	lastUpdated time.Time,
+	windowWidth int,
+) string {
 	var sb strings.Builder
 	hotKeyStyle := configs.BoldText.Foreground(configs.NiceBlue)
 	menuTextStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(configs.ColorDimGrey))
 	menuStyle := lipgloss.NewStyle().
-		Width(configs.ScheduleStyle.GetWidth()).
+		Width(windowWidth).
 		AlignHorizontal(lipgloss.Center)
 
 	for _, value := range keyOrder {
@@ -52,7 +57,11 @@ func ViewMenu(items map[string]string, keyOrder []string, lastUpdated time.Time)
 func ViewServers(m BubbleTeaModel) string {
 	ascii := figlet4go.NewAsciiRender()
 	header, _ := ascii.Render("Servers")
-	heading := lipgloss.NewStyle().Foreground(configs.HotPink).Render(header)
+	heading := lipgloss.NewStyle().
+		Foreground(configs.HotPink).
+		Width(configs.ApplicationWidth).
+		AlignHorizontal(lipgloss.Center).
+		Render(header)
 	mainContent := lipgloss.JoinVertical(
 		lipgloss.Top,
 		heading,
@@ -64,7 +73,7 @@ func ViewServers(m BubbleTeaModel) string {
 		),
 		exaroton.View(m.Data.ExarotonServers, m.AlternatingText, m.Data.ExarotonCreditLeft),
 	)
-	return mainContent
+	return lipgloss.PlaceHorizontal(m.WindowWidth, lipgloss.Center, mainContent)
 }
 
 func ViewMain(m BubbleTeaModel, topLeft string) string {
@@ -81,7 +90,7 @@ func ViewMain(m BubbleTeaModel, topLeft string) string {
 	scheduleView := schedule.View(m.Data.Schedule)
 
 	statusStyle := lipgloss.NewStyle().
-		Width(configs.ScheduleStyle.GetWidth()).
+		Width(m.WindowWidth).
 		AlignHorizontal(lipgloss.Center)
 	statusLine := statusStyle.Render(
 		truenas.Status(
