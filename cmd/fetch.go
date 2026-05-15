@@ -2,11 +2,15 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 
+	logger "StatusApp/internal"
+	"StatusApp/internal/exaroton"
+	"StatusApp/internal/hosthatch"
 	"StatusApp/internal/schedule"
 	"StatusApp/internal/upcloud"
 	"StatusApp/internal/weather"
@@ -51,6 +55,11 @@ func fetchData(m *BubbleTeaModel) tea.Cmd {
 				errs <- err
 			}, func() {
 				result.HostHatchServers, err = m.HostHatchClient.ListServers(ctx)
+				if err != nil {
+					result.HostHatchServers = []hosthatch.Server{
+						{Hostname: fmt.Sprintf("HH: %s", err.Error())},
+					}
+				}
 				errs <- err
 			}, func() {
 				result.UpCloudServers, err = m.UpCloudClient.ListServers(ctx)
@@ -58,6 +67,9 @@ func fetchData(m *BubbleTeaModel) tea.Cmd {
 			}, func() {
 				result.ExarotonServers, err = m.ExarotonClient.ListServers(ctx)
 				if err != nil {
+					result.ExarotonServers = []exaroton.Server{
+						{Name: "Exaroton: error", Status: 0},
+					}
 					errs <- err
 				}
 				result.ExarotonCreditLeft, err = m.ExarotonClient.RemainingCredits(ctx)
@@ -94,7 +106,7 @@ func fetchData(m *BubbleTeaModel) tea.Cmd {
 
 		for range len(updateFunctions) {
 			if err := <-errs; err != nil {
-				return errorMsg{err} // Return on the first error
+				logger.LogError(err.Error())
 			}
 		}
 
@@ -104,9 +116,17 @@ func fetchData(m *BubbleTeaModel) tea.Cmd {
 		if err != nil {
 			return errorMsg{err}
 		}
-		return fetchedDataMsg{
-			time: time.Now(),
-			data: result,
+
+		for {
+			select {
+			case <-time.After(5 * time.Second):
+				cancel()
+			case <-ctx.Done():
+				return fetchedDataMsg{
+					time: time.Now(),
+					data: result,
+				}
+			}
 		}
 	}
 }

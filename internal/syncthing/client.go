@@ -23,7 +23,8 @@ type Client struct {
 
 func NewClient(apiKey string) *Client {
 	return &Client{
-		baseURL: "http://syncthing.manfred.no",
+		// baseURL: "http://syncthing.manfred.no",
+		baseURL: "http://192.168.0.187:20910",
 		apiKey:  apiKey,
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
