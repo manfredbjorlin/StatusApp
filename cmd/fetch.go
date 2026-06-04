@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -57,7 +56,7 @@ func fetchData(m *BubbleTeaModel) tea.Cmd {
 				result.HostHatchServers, err = m.HostHatchClient.ListServers(ctx)
 				if err != nil {
 					result.HostHatchServers = []hosthatch.Server{
-						{Hostname: fmt.Sprintf("HH: %s", err.Error())},
+						{Hostname: "HostHatch: N/A"},
 					}
 				}
 				errs <- err
@@ -68,7 +67,7 @@ func fetchData(m *BubbleTeaModel) tea.Cmd {
 				result.ExarotonServers, err = m.ExarotonClient.ListServers(ctx)
 				if err != nil {
 					result.ExarotonServers = []exaroton.Server{
-						{Name: "Exaroton: error", Status: 0},
+						{Name: "Exaroton: N/A", Status: 0},
 					}
 					errs <- err
 				}
@@ -119,7 +118,7 @@ func fetchData(m *BubbleTeaModel) tea.Cmd {
 
 		for {
 			select {
-			case <-time.After(5 * time.Second):
+			case <-time.After(20 * time.Second):
 				cancel()
 			case <-ctx.Done():
 				return fetchedDataMsg{
