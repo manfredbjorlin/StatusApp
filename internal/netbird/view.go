@@ -25,7 +25,7 @@ func View(
 
 	fmt.Fprintf(
 		&sb,
-		"%s\n",
+		"\n%s\n",
 		strings.Repeat(" ", 6)+configs.BoldText.Render("\uef08 The Bird Valley"),
 	)
 

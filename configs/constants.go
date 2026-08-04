@@ -3,7 +3,7 @@ package configs
 import "github.com/charmbracelet/lipgloss"
 
 const (
-	DateFormat                    = "2. January 2006"
+	DateFormat                    = "Monday, 2. January 2006"
 	SecondsBetweenRefresh         = 60
 	SecondsBetweenAlternatingText = 5
 	MaxScheduleEvents             = 4

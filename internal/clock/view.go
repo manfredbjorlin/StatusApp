@@ -33,10 +33,12 @@ func RenderClock(weatherPart string, err error) string {
 
 	clock := lipglossPink.Render(clockStr)
 
+	dateFormat := configs.BoldText.MarginTop(-1)
+
 	withText := lipgloss.JoinVertical(
 		lipgloss.Center,
 		clock,
-		configs.BoldText.Render(time.Now().Format(configs.DateFormat)),
+		dateFormat.Render(time.Now().Format(configs.DateFormat)),
 		configs.BoldText.Render(weatherPart),
 	)
 
