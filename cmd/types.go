@@ -7,6 +7,7 @@ import (
 	"StatusApp/configs"
 	"StatusApp/internal/exaroton"
 	"StatusApp/internal/hosthatch"
+	"StatusApp/internal/netbird"
 	"StatusApp/internal/syncthing"
 	"StatusApp/internal/tailscale"
 	"StatusApp/internal/truenas"
@@ -17,6 +18,7 @@ import (
 
 type BubbleTeaModel struct {
 	TailscaleClient tailscale.MachineGetter
+	NetBirdClient   netbird.MachineGetter
 	WeatherClient   weather.DataProvider
 	TruenasClient   truenas.AppGetter
 	HostHatchClient hosthatch.HostHatchClient
@@ -39,6 +41,11 @@ func newModel() BubbleTeaModel {
 			os.Getenv("TAILSCALE_API_KEY"),
 			os.Getenv("TAILSCALE_TAILNET_ID"),
 			os.Getenv("TAILSCALE_API_KEY_ID"),
+		),
+		NetBirdClient: netbird.NewClient(
+			os.Getenv("NETBIRD_API_KEY"),
+			os.Getenv("NETBIRD_USER_ID"),
+			os.Getenv("NETBIRD_API_KEY_ID"),
 		),
 		WeatherClient: weather.NewClient(
 			os.Getenv("WEATHERAPI_API_KEY"),

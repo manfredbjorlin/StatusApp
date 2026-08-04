@@ -27,6 +27,9 @@ func Status(servers []Server) string {
 		}
 		result = append(result, fmt.Sprintf("%s %s", icon, server.Title))
 	}
+	if len(result) == 0 {
+		return "UpCloud: None"
+	}
 
 	return strings.Join(result, " - ")
 }

@@ -5,6 +5,7 @@ import (
 
 	"StatusApp/internal/exaroton"
 	"StatusApp/internal/hosthatch"
+	"StatusApp/internal/netbird"
 	"StatusApp/internal/schedule"
 	"StatusApp/internal/syncthing"
 	"StatusApp/internal/tailscale"
@@ -19,6 +20,8 @@ type MainModel struct {
 	Schedule             []schedule.Meeting
 	TailscaleDevices     tailscale.Devices
 	TailscaleKeyExpiry   time.Time
+	NetBirdPeers         []netbird.Peer
+	NetBirdKeyExpiry     time.Time
 	TruenasApps          []truenas.App
 	Weather              *weather.WeatherForecastInternal
 	WaterTemperature     weather.WaterTemperatureInternal

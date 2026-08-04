@@ -35,6 +35,13 @@ func fetchData(m *BubbleTeaModel) tea.Cmd {
 			func() {
 				result.TailscaleKeyExpiry, err = m.TailscaleClient.GetKeyExpiry(ctx)
 				errs <- err
+			},
+			func() {
+				result.NetBirdPeers, err = m.NetBirdClient.GetMachines(ctx)
+				errs <- err
+			}, func() {
+				result.NetBirdKeyExpiry, err = m.NetBirdClient.GetKeyExpiry(ctx)
+				errs <- err
 			}, func() {
 				result.TruenasApps, err = m.TruenasClient.GetApps(ctx)
 				errs <- err

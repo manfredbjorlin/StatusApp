@@ -47,7 +47,9 @@ func View(apps []App) string {
 				line += greenBold.Render(ok)
 
 			} else {
-				line += pinkBold.Render("Updating")
+				caser := cases.Title(language.BrazilianPortuguese)
+				status := caser.String(app.State)
+				line += pinkBold.Render(status)
 			}
 			// var lineStyle lipgloss.Style
 			// lineStyle = configs.SetBg(lineStyle)
