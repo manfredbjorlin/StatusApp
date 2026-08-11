@@ -75,11 +75,12 @@ func View(
 				Render("\uea6e")
 			spacing -= 2
 
+			location := " Home"
 			if len(peer.CountryCode) > 0 {
-				location := " " + peer.CityName
-				spacing -= len(location)
-				exitIcon += nameStyle.Render(location)
+				location = " " + peer.CityName
 			}
+			spacing -= len(location)
+			exitIcon += nameStyle.Render(location)
 		}
 		if peer.InactivityExpirationEnabled {
 			keyIcon = nameStyle.Render(
