@@ -22,6 +22,7 @@ type MainModel struct {
 	TailscaleKeyExpiry   time.Time
 	NetBirdPeers         []netbird.Peer
 	NetBirdKeyExpiry     time.Time
+	NetBirdLatestVersion string
 	TruenasApps          []truenas.App
 	Weather              *weather.WeatherForecastInternal
 	WaterTemperature     weather.WaterTemperatureInternal

@@ -37,6 +37,10 @@ func fetchData(m *BubbleTeaModel) tea.Cmd {
 				errs <- err
 			},
 			func() {
+				result.NetBirdLatestVersion, err = m.NetBirdClient.GetLatestVersion(ctx)
+				errs <- err
+			},
+			func() {
 				result.NetBirdPeers, err = m.NetBirdClient.GetMachines(ctx)
 				errs <- err
 			}, func() {

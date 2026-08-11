@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
 type MachineGetter interface {
+	GetLatestVersion(ctx context.Context) (string, error)
 	GetMachines(ctx context.Context) ([]Peer, error)
 	GetKeyExpiry(ctx context.Context) (time.Time, error)
 }
@@ -31,6 +33,41 @@ func NewClient(apiKey, userID, keyID string) *Client {
 		httpClient: &http.Client{
 			Timeout: 10 * time.Second,
 		},
+	}
+}
+
+func (c *Client) GetLatestVersion(ctx context.Context) (string, error) {
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"GET",
+		"https://api.github.com/repos/netbirdio/netbird/releases/latest",
+		nil,
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to create version request: %w", err)
+	}
+
+	res, err := c.httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to execute version request: %w", err)
+	}
+
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(res.Body)
+		return "", fmt.Errorf(
+			"bad status code for devices: %d, body: %s",
+			res.StatusCode,
+			string(bodyBytes),
+		)
+	}
+
+	m := Version{}
+	if err := json.NewDecoder(res.Body).Decode(&m); err != nil {
+		return "", fmt.Errorf("failed to decode Version response: %w", err)
+	} else {
+		return strings.TrimPrefix(m.Name, "v"), nil
 	}
 }
 

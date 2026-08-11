@@ -105,6 +105,7 @@ func (m BubbleTeaModel) View() string {
 		topLeft := netbird.View(
 			m.Data.NetBirdPeers,
 			m.Data.NetBirdKeyExpiry,
+			m.Data.NetBirdLatestVersion,
 			m.AlternatingText,
 		)
 		mainContent = ViewMain(m, topLeft)

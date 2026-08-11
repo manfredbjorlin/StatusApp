@@ -17,11 +17,13 @@ import (
 func View(
 	peers []Peer,
 	keyExpiry time.Time,
+	latestVersion string,
 	alternatingText bool,
 ) string {
 	var sb strings.Builder
 	greenBold := lipgloss.NewStyle().Bold(true).Foreground(configs.BrightGreen)
 	pinkBold := lipgloss.NewStyle().Bold(true).Foreground(configs.HotPink)
+	blueBold := lipgloss.NewStyle().Bold(true).Foreground(configs.NiceBlue)
 
 	fmt.Fprintf(
 		&sb,
@@ -47,11 +49,14 @@ func View(
 		sb.WriteString(logoStyle.Render(deviceIcon))
 
 		caser := cases.Title(language.BrazilianPortuguese)
-		name := caser.String(strings.Split(peer.Name, ".")[0])
+		name := caser.String(peer.Name)
+		indicator := ""
+		indicatorPadding := 0
 		if peer.Hostname == hostname {
-			name += " (this)"
+			indicator = " \uf256"
+			indicatorPadding = 2
 		}
-		spacing := 22 - len(name)
+		spacing := 21 - len(name) - indicatorPadding
 		nameStyle := lipgloss.NewStyle()
 		nameStyle = configs.SetBg(nameStyle, i)
 		exitIcon := ""
@@ -69,17 +74,24 @@ func View(
 			) + nameStyle.Foreground(configs.NiceBlue).
 				Render("\uea6e")
 			spacing -= 2
+
+			if len(peer.CountryCode) > 0 {
+				location := " " + peer.CityName
+				spacing -= len(location)
+				exitIcon += nameStyle.Render(location)
+			}
 		}
-		if !peer.InactivityExpirationEnabled {
+		if peer.InactivityExpirationEnabled {
 			keyIcon = nameStyle.Render(
 				" ",
 			) + nameStyle.Foreground(configs.NiceBlue).
-				Render("\ueb11")
+				Render("\ue641")
 			spacing -= 2
 		}
 		sb.WriteString(nameStyle.Render(
 			" " + name,
 		))
+		sb.WriteString(nameStyle.Foreground(configs.BrightGreen).Render(indicator))
 		sb.WriteString(exitIcon)
 		sb.WriteString(keyIcon)
 		sb.WriteString(nameStyle.Render(strings.Repeat(
@@ -88,18 +100,30 @@ func View(
 		)))
 
 		if peer.Connected || !alternatingText {
+			updateStyle := greenBold
+			updateLogo := "\uf00c"
+
+			if strings.HasPrefix(peer.Os, "Android") {
+				updateLogo = "\uf128"
+				updateStyle = blueBold
+			} else if peer.Version != latestVersion {
+				updateLogo = "\uf00d"
+				updateStyle = pinkBold
+			}
+
+			sb.WriteString(updateStyle.Render(updateLogo))
 			sb.WriteString(nameStyle.Render(" " + peer.Version))
 			sb.WriteString("\n")
 		} else {
 			diffText := common.GetTimeDifferenceString(peer.LastSeen)
-			sb.WriteString(nameStyle.Render(fmt.Sprintf(" \uf017 %4s", diffText)))
+			sb.WriteString(nameStyle.Render(fmt.Sprintf("\uf017 %6s", diffText)))
 			sb.WriteString("\n")
 		}
 	}
 
 	offlineDiff := time.Until(keyExpiry)
 	diffText := common.GetTimeDifferenceString(keyExpiry)
-	sb.WriteString("\nNetbird key expiry: ")
+	sb.WriteString("\nNetbird key expiry:    ")
 	keytext := fmt.Sprintf("%s%6s", "\uf017 ", diffText)
 	if offlineDiff.Hours() < (24 * 4) {
 		sb.WriteString(pinkBold.Render(keytext))

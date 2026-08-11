@@ -54,3 +54,7 @@ type Peer struct {
 type Key struct {
 	Expires time.Time `json:"expiration_date"`
 }
+
+type Version struct {
+	Name string `json:"name"`
+}
