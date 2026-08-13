@@ -10,10 +10,19 @@ import (
 	logger "StatusApp/internal"
 	"StatusApp/internal/exaroton"
 	"StatusApp/internal/hosthatch"
+	"StatusApp/internal/netbird"
 	"StatusApp/internal/schedule"
+	"StatusApp/internal/tailscale"
 	"StatusApp/internal/upcloud"
 	"StatusApp/internal/weather"
 	"StatusApp/pkg/core"
+)
+
+type VnetProvider string
+
+const (
+	vnetTailscale VnetProvider = "tailscale"
+	vnetNetbird   VnetProvider = "netbird"
 )
 
 func fetchData(m *BubbleTeaModel) tea.Cmd {
@@ -26,33 +35,63 @@ func fetchData(m *BubbleTeaModel) tea.Cmd {
 		var errs chan error
 
 		result := core.MainModel{}
+		vnetProvider := VnetProvider(os.Getenv("VNET_PROVIDER"))
 
 		updateFunctions := []updateFuncs{
 			func() {
-				result.TailscaleDevices, err = m.TailscaleClient.GetMachines(ctx)
-				errs <- err
+				if vnetProvider == vnetTailscale {
+					result.TailscaleDevices, err = m.TailscaleClient.GetMachines(ctx)
+					errs <- err
+				} else {
+					result.TailscaleDevices = tailscale.Devices{}
+					errs <- nil
+				}
 			},
 			func() {
-				result.TailscaleKeyExpiry, err = m.TailscaleClient.GetKeyExpiry(ctx)
-				errs <- err
+				if vnetProvider == vnetTailscale {
+					result.TailscaleKeyExpiry, err = m.TailscaleClient.GetKeyExpiry(ctx)
+					errs <- err
+				} else {
+					result.TailscaleKeyExpiry = time.Now()
+					errs <- nil
+				}
 			},
 			func() {
-				result.NetBirdLatestVersion, err = m.NetBirdClient.GetLatestVersion(ctx)
-				errs <- err
+				if vnetProvider == vnetNetbird {
+					result.NetBirdLatestVersion, err = m.NetBirdClient.GetLatestVersion(ctx)
+					errs <- err
+				} else {
+					result.NetBirdLatestVersion = ""
+					errs <- nil
+				}
 			},
 			func() {
-				result.NetBirdPeers, err = m.NetBirdClient.GetMachines(ctx)
-				errs <- err
-			}, func() {
-				result.NetBirdKeyExpiry, err = m.NetBirdClient.GetKeyExpiry(ctx)
-				errs <- err
-			}, func() {
+				if vnetProvider == vnetNetbird {
+					result.NetBirdPeers, err = m.NetBirdClient.GetMachines(ctx)
+					errs <- err
+				} else {
+					result.NetBirdPeers = make([]netbird.Peer, 0)
+					errs <- nil
+				}
+			},
+			func() {
+				if vnetProvider == vnetNetbird {
+					result.NetBirdKeyExpiry, err = m.NetBirdClient.GetKeyExpiry(ctx)
+					errs <- err
+				} else {
+					result.NetBirdKeyExpiry = time.Now()
+					errs <- nil
+				}
+			},
+			func() {
 				result.TruenasApps, err = m.TruenasClient.GetApps(ctx)
 				errs <- err
-			}, func() {
+			},
+			func() {
 				result.Weather, err = m.WeatherClient.GetCurrentWeather(ctx)
 				errs <- err
-			}, func() {
+			},
+			func() {
 				waterTemp, err := m.WeatherClient.GetWaterTemperature(ctx)
 				if len(waterTemp.Embedded.NearestLocations) > 0 {
 					loc := waterTemp.Embedded.NearestLocations[0]
@@ -63,7 +102,8 @@ func fetchData(m *BubbleTeaModel) tea.Cmd {
 					}
 				}
 				errs <- err
-			}, func() {
+			},
+			func() {
 				result.HostHatchServers, err = m.HostHatchClient.ListServers(ctx)
 				if err != nil {
 					result.HostHatchServers = []hosthatch.Server{
@@ -71,10 +111,12 @@ func fetchData(m *BubbleTeaModel) tea.Cmd {
 					}
 				}
 				errs <- err
-			}, func() {
+			},
+			func() {
 				result.UpCloudServers, err = m.UpCloudClient.ListServers(ctx)
 				errs <- err
-			}, func() {
+			},
+			func() {
 				result.ExarotonServers, err = m.ExarotonClient.ListServers(ctx)
 				if err != nil {
 					result.ExarotonServers = []exaroton.Server{
@@ -84,10 +126,12 @@ func fetchData(m *BubbleTeaModel) tea.Cmd {
 				}
 				result.ExarotonCreditLeft, err = m.ExarotonClient.RemainingCredits(ctx)
 				errs <- err
-			}, func() {
+			},
+			func() {
 				result.SyncthingConnections, err = m.SyncthingClient.ListConnections(ctx)
 				errs <- err
-			}, func() {
+			},
+			func() {
 				_, remaining, err := m.UpCloudClient.RemainingCredits(
 					ctx,
 				)

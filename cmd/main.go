@@ -13,6 +13,7 @@ import (
 	"StatusApp/configs"
 	"StatusApp/internal/netbird"
 	"StatusApp/internal/syncthing"
+	"StatusApp/internal/tailscale"
 	"StatusApp/internal/truenas"
 )
 
@@ -97,17 +98,22 @@ func (m BubbleTeaModel) View() string {
 		mainContent = ViewServers(m)
 		menuItemOrder = []string{"q", "r", "m", "a", "y"}
 	case configs.ScreenMain:
-		// topLeft := tailscale.View(
-		// 	m.Data.TailscaleDevices.Devices,
-		// 	m.Data.TailscaleKeyExpiry,
-		// 	m.AlternatingText,
-		// )
-		topLeft := netbird.View(
-			m.Data.NetBirdPeers,
-			m.Data.NetBirdKeyExpiry,
-			m.Data.NetBirdLatestVersion,
-			m.AlternatingText,
-		)
+		topLeft := ""
+
+		if os.Getenv("VNET_PROVIDER") == "tailscale" {
+			topLeft = tailscale.View(
+				m.Data.TailscaleDevices.Devices,
+				m.Data.TailscaleKeyExpiry,
+				m.AlternatingText,
+			)
+		} else {
+			topLeft = netbird.View(
+				m.Data.NetBirdPeers,
+				m.Data.NetBirdKeyExpiry,
+				m.Data.NetBirdLatestVersion,
+				m.AlternatingText,
+			)
+		}
 		mainContent = ViewMain(m, topLeft)
 		menuItemOrder = []string{"q", "r", "a", "s", "y"}
 	case configs.ScreenApps:

@@ -8,6 +8,7 @@ The project has recently undergone a significant architectural refactoring to im
 
 -   **Digital Clock:** Displays the current time using stylized ASCII art (Figlet).
 -   **Tailscale Status:** Shows the connection status and details of your Tailscale devices, including key expiry.
+-   **Netbird Status:** Shows connection status and details of your Netbird devices, including key expiry.
 -   **TrueNAS Status:** Monitors the status of applications running on a TrueNAS instance.
 -   **Weather Information:** Presents current weather conditions and water temperature for a configured location.
 -   **Meeting Schedule:** Displays upcoming meetings from a local schedule file.
@@ -56,6 +57,8 @@ WEATHER_ICON_PATH=path/to/weather.json # e.g., assets/weather.json
 WEATHER_LAT=your_latitude
 WEATHER_LON=your_longitude
 WEATHER_ICON_PATH_YR=path/to/weather_yr.csv # e.g., assets/weather_yr.csv
+
+VNET_PROVIDER=netbird #netbird or tailscale
 ```
 
 If using Tailscale, the following must be present:
