@@ -20,7 +20,9 @@ The project has recently undergone a significant architectural refactoring to im
 
 To run StatusApp, you need:
 -   Go (version 1.25.5 or later)
--   Access to Tailscale API (for device status)
+-   Access to either (for device status):
+    -   Tailscale API 
+    -   Netbird API
 -   Access to [WeatherAPI](https://www.weatherapi.com) (for weather information)
 -   Access to a TrueNAS instance with the API enabled.
 -   Access to the HostHatch API.
@@ -33,9 +35,6 @@ The project follows a modern, domain-driven structure and now includes a compreh
 StatusApp uses environment variables for configuration, loaded from a `.env` file in the project root. Create a `.env` file with the following variables:
 
 ```
-TAILSCALE_TAILNET_ID=your_tailnet_id
-TAILSCALE_API_KEY=your_tailscale_api_key
-TAILSCALE_API_KEY_ID=your_tailscale_api_key_id
 WEATHERAPI_API_KEY=your_weatherapi_key
 WEATHERAPI_LOCATION=your_location
 WATERTEMPERATURE_LOCATION_ID=your_watertemp_location_id
@@ -57,6 +56,19 @@ WEATHER_ICON_PATH=path/to/weather.json # e.g., assets/weather.json
 WEATHER_LAT=your_latitude
 WEATHER_LON=your_longitude
 WEATHER_ICON_PATH_YR=path/to/weather_yr.csv # e.g., assets/weather_yr.csv
+```
+
+If using Tailscale, the following must be present:
+```
+TAILSCALE_TAILNET_ID=your_tailnet_id
+TAILSCALE_API_KEY=your_tailscale_api_key
+TAILSCALE_API_KEY_ID=your_tailscale_api_key_id
+```
+If using Netbird, the following must be present:
+```
+NETBIRD_API_KEY=netbird_api_key
+NETBIRD_USER_ID=netbird_user_id
+NETBIRD_API_KEY_ID=netbird_api_key_id
 ```
 
 ## File Structure: Schedule
